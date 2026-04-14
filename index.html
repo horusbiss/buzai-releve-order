@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>部材拾い出し＋Excel変換 一体版 v6 mobile fix</title>
+<title>部材拾い出し＋Excel変換 一体版 v7 share</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -46,9 +46,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .delBtn{width:100%;margin-top:10px}
 .flash{background:#ecfeff}
 .stickyBar{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(245,247,251,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
-.stickyInner{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stickyInner{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .quickBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
 .quickBtns button{padding:10px 0;min-height:42px;font-size:15px}
+.linkBox{margin-top:10px;padding:10px 12px;background:#f9fafb;border:1px solid var(--line);border-radius:14px;word-break:break-all}
 @media (min-width:761px){
   .wrap{padding-bottom:24px}
   .stickyBar{position:static;padding:0;background:transparent;border-top:none;backdrop-filter:none}
@@ -60,7 +61,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <body>
 <div class="wrap">
   <h1>部材拾い出し＋Excel変換</h1>
-  <div class="sub">スマホ版の保存方式を修正しました。Safariでも保存しやすいように、ダウンロードリンク方式にしています。</div>
+  <div class="sub">共有ボタンを追加しました。iPhoneでは共有シートを開いて、メール・LINE・ファイルへ直接渡しやすくしています。</div>
 
   <div class="card">
     <div class="pill">手順 1</div>
@@ -80,6 +81,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
       <div class="mini"><div class="k">会社名</div><div class="v" id="sumCompany">-</div></div>
     </div>
     <div id="saveStatus" class="status"></div>
+    <div id="manualLinkBox" class="linkBox hide"></div>
   </div>
 
   <div class="card">
@@ -121,7 +123,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div class="stickyBar">
   <div class="stickyInner">
     <button id="addBtn">拾い出しに追加</button>
-    <button id="downloadExcelBtn" class="secondary" disabled>提出用Excelを書き出す</button>
+    <button id="downloadExcelBtn" class="secondary" disabled>保存</button>
+    <button id="shareExcelBtn" class="ghost" disabled>ファイル共有</button>
   </div>
 </div>
 
@@ -133,6 +136,8 @@ let allItems=[];
 let pickedItems=[];
 let lastFlashRow=null;
 let currentDownloadUrl=null;
+let currentFileBlob=null;
+let currentFileName='';
 
 function yen(n){return '¥'+Number(n||0).toLocaleString('ja-JP')}
 function esc(s){return String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]))}
@@ -158,7 +163,9 @@ function refreshSummary(){
   document.getElementById('sumSelected').textContent=pickedItems.length;
   document.getElementById('sumTotal').textContent=yen(total);
   document.getElementById('sumCompany').textContent=document.getElementById('companyName').value.trim()||'-';
-  document.getElementById('downloadExcelBtn').disabled=!originalWorkbook||pickedItems.length===0;
+  const enabled=!!originalWorkbook&&pickedItems.length>0;
+  document.getElementById('downloadExcelBtn').disabled=!enabled;
+  document.getElementById('shareExcelBtn').disabled=!enabled;
 }
 function renderGroupPicker(){
   const groups=[...new Set(allItems.map(x=>x.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));
@@ -214,6 +221,7 @@ function renderPickedList(){
       lastFlashRow=idx;
       renderPickedList();
       refreshSummary();
+      clearPreparedFile();
       setTimeout(()=>{lastFlashRow=null;renderPickedList();},350);
     });
   });
@@ -224,8 +232,20 @@ function renderPickedList(){
       lastFlashRow=null;
       renderPickedList();
       refreshSummary();
+      clearPreparedFile();
     });
   });
+}
+function clearPreparedFile(){
+  currentFileBlob=null;
+  currentFileName='';
+  document.getElementById('saveStatus').textContent='';
+  document.getElementById('manualLinkBox').classList.add('hide');
+  document.getElementById('manualLinkBox').innerHTML='';
+  if(currentDownloadUrl){
+    URL.revokeObjectURL(currentDownloadUrl);
+    currentDownloadUrl=null;
+  }
 }
 function loadWorkbook(){
   const file=document.getElementById('xlsxFile').files[0];
@@ -240,8 +260,7 @@ function loadWorkbook(){
     const sheet1=originalWorkbook.Sheets[sheet1Name];
     allItems=buildItemsFromSheet1(sheet1);
     pickedItems=[]; lastFlashRow=null;
-    renderGroupPicker(); renderPickedList(); refreshSummary(); hideMergeNotice();
-    document.getElementById('saveStatus').textContent='';
+    renderGroupPicker(); renderPickedList(); refreshSummary(); hideMergeNotice(); clearPreparedFile();
     status.innerHTML=`<span class="ok">読込完了。</span> ${sheet1Name} から ${allItems.length} 件読み込みました。`;
   }catch(err){status.innerHTML=`<span class="danger">エラー: ${esc(err.message)}</span>`;}}
   reader.readAsArrayBuffer(file);
@@ -272,14 +291,14 @@ function addPickedItem(){
   document.getElementById('qtyOne').value='';
   renderPickedList();
   refreshSummary();
+  clearPreparedFile();
   const card=document.getElementById('picked-row-'+lastFlashRow);
   if(card){card.scrollIntoView({behavior:'smooth',block:'center'});}
   setTimeout(()=>{lastFlashRow=null;renderPickedList();},700);
 }
 function clearAllQty(){
   pickedItems=[]; lastFlashRow=null;
-  renderPickedList(); refreshSummary(); hideMergeNotice();
-  document.getElementById('saveStatus').textContent='';
+  renderPickedList(); refreshSummary(); hideMergeNotice(); clearPreparedFile();
 }
 function buildWorkbook(){
   const wb=XLSX.read(XLSX.write(originalWorkbook,{type:'array',bookType:'xlsx'}),{type:'array',cellFormula:true,cellStyles:true});
@@ -308,35 +327,66 @@ function buildWorkbook(){
   sheet1[totalCell]={t:'n',f:'SUM(H:H)'};
   return wb;
 }
-function downloadBlob(blob, filename){
+function prepareFile(){
+  if(!originalWorkbook) throw new Error('先にExcelを読み込んでください。');
+  if(!pickedItems.length) throw new Error('拾い出し結果がありません。');
+  const wb=buildWorkbook();
+  const companyName=document.getElementById('companyName').value.trim();
+  const baseName=(document.getElementById('xlsxFile').files[0]?.name||'提出要部材購入').replace(/\.xlsx$/i,'');
+  const filename=`${baseName}_${companyName||'会社名なし'}_更新.xlsx`;
+  const array=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  const blob=new Blob([array],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  currentFileBlob=blob;
+  currentFileName=filename;
+  return {blob, filename};
+}
+function showManualLink(blob, filename){
   if(currentDownloadUrl){
     URL.revokeObjectURL(currentDownloadUrl);
     currentDownloadUrl=null;
   }
   currentDownloadUrl=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=currentDownloadUrl;
-  a.download=filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{a.remove();},100);
-
-  const status=document.getElementById('saveStatus');
-  status.innerHTML=`<span class="ok">保存用ファイルを作成しました。</span><br>自動で保存されない場合は、<a href="${currentDownloadUrl}" download="${filename}">ここをタップして保存</a>`;
+  const box=document.getElementById('manualLinkBox');
+  box.innerHTML=`保存や共有が始まらない場合は、<a href="${currentDownloadUrl}" download="${filename}">ここをタップ</a>`;
+  box.classList.remove('hide');
 }
-function writeWorkbookAndDownload(){
-  if(!originalWorkbook){alert('先にExcelを読み込んでください。');return;}
-  if(!pickedItems.length){alert('拾い出し結果がありません。');return;}
+function downloadFile(){
   try{
-    const wb=buildWorkbook();
-    const companyName=document.getElementById('companyName').value.trim();
-    const baseName=(document.getElementById('xlsxFile').files[0]?.name||'提出要部材購入').replace(/\.xlsx$/i,'');
-    const filename=`${baseName}_${companyName||'会社名なし'}_更新.xlsx`;
-    const array=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-    const blob=new Blob([array],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    downloadBlob(blob, filename);
+    const {blob, filename}=prepareFile();
+    showManualLink(blob, filename);
+    const a=document.createElement('a');
+    a.href=currentDownloadUrl;
+    a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>a.remove(),100);
+    document.getElementById('saveStatus').innerHTML=`<span class="ok">保存用ファイルを作成しました。</span>`;
   }catch(err){
-    document.getElementById('saveStatus').innerHTML=`<span class="danger">書き出しエラー: ${esc(err.message)}</span>`;
+    document.getElementById('saveStatus').innerHTML=`<span class="danger">保存エラー: ${esc(err.message)}</span>`;
+  }
+}
+async function shareFile(){
+  try{
+    const {blob, filename}=prepareFile();
+    showManualLink(blob, filename);
+    const file = new File([blob], filename, {type: blob.type, lastModified: Date.now()});
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({
+        files:[file],
+        title: filename,
+        text: '提出用Excelです'
+      });
+      document.getElementById('saveStatus').innerHTML=`<span class="ok">共有シートを開きました。</span>`;
+      return;
+    }
+    downloadFile();
+    document.getElementById('saveStatus').innerHTML=`<span class="info">この端末では直接共有に未対応のため、保存リンクを出しました。</span>`;
+  }catch(err){
+    if(String(err && err.name) === 'AbortError'){
+      document.getElementById('saveStatus').innerHTML=`<span class="info">共有をキャンセルしました。</span>`;
+    } else {
+      document.getElementById('saveStatus').innerHTML=`<span class="danger">共有エラー: ${esc(err.message || err)}</span>`;
+    }
   }
 }
 
@@ -344,8 +394,9 @@ document.getElementById('loadBtn').addEventListener('click',loadWorkbook);
 document.getElementById('clearBtn').addEventListener('click',clearAllQty);
 document.getElementById('groupPicker').addEventListener('change',renderItemPicker);
 document.getElementById('addBtn').addEventListener('click',addPickedItem);
-document.getElementById('downloadExcelBtn').addEventListener('click',writeWorkbookAndDownload);
-document.getElementById('companyName').addEventListener('input',refreshSummary);
+document.getElementById('downloadExcelBtn').addEventListener('click',downloadFile);
+document.getElementById('shareExcelBtn').addEventListener('click',shareFile);
+document.getElementById('companyName').addEventListener('input',()=>{refreshSummary();clearPreparedFile();});
 document.getElementById('qtyClearBtn').addEventListener('click',()=>{document.getElementById('qtyOne').value='';});
 document.querySelectorAll('.quickAdd').forEach(btn=>{
   btn.addEventListener('click',()=>{
