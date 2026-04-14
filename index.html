@@ -3,130 +3,154 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>部材拾い出し＋Excel変換 一体版 v4</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>部材拾い出し＋Excel変換 一体版 v5 mobile</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#f7f7f8;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#111827;--ok:#166534;--danger:#b91c1c;--info:#1d4ed8;--soft:#eef2ff}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.wrap{max-width:1200px;margin:0 auto;padding:16px}
-h1{font-size:24px;margin:0 0 8px}
-.sub{color:var(--muted);font-size:14px;margin-bottom:16px}
-.grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
-label{display:block;font-size:13px;font-weight:700;margin:10px 0 6px}
-input[type="text"],input[type="file"],select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
-button{border:none;border-radius:10px;background:var(--accent);color:#fff;padding:11px 14px;cursor:pointer;font-weight:700}
+:root{
+  --bg:#f5f7fb; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#111827; --ok:#166534; --danger:#b91c1c; --info:#1d4ed8; --soft:#eef2ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.wrap{max-width:760px;margin:0 auto;padding:12px 12px 100px}
+h1{font-size:22px;line-height:1.3;margin:0 0 6px}
+.sub{color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:12px}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:14px;margin-bottom:12px;box-shadow:0 1px 1px rgba(0,0,0,.02);
+}
+label{display:block;font-size:13px;font-weight:800;margin:10px 0 6px}
+input[type="text"],input[type="file"],select{
+  width:100%;min-height:48px;padding:12px 14px;border:1px solid var(--line);
+  border-radius:14px;background:#fff;font-size:16px;
+}
+button{
+  border:none;border-radius:14px;background:var(--accent);color:#fff;
+  padding:14px 16px;cursor:pointer;font-weight:800;font-size:16px;min-height:48px;
+}
 button.secondary{background:#374151}
 button.ghost{background:#fff;color:#111;border:1px solid var(--line)}
-button:disabled{opacity:.5;cursor:not-allowed}
-.small{font-size:12px;color:var(--muted)}
-.status{font-size:13px;margin-top:10px}
+button:disabled{opacity:.55;cursor:not-allowed}
+.small{font-size:12px;color:var(--muted);line-height:1.5}
+.status{font-size:13px;margin-top:10px;line-height:1.5}
 .ok{color:var(--ok)} .danger{color:var(--danger)} .info{color:var(--info)}
-.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f3f4f6;font-size:12px}
-.footerBar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.summaryBox{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
-.mini{background:#f9fafb;border:1px solid var(--line);border-radius:12px;padding:10px}
-.mini .k{font-size:12px;color:var(--muted)} .mini .v{font-size:18px;font-weight:800}
-.listWrap{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:14px}
-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
-thead th{position:sticky;top:0;background:#f9fafb;z-index:1}
-th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:middle}
-th.num,td.num{text-align:right}
-td input.qtyEdit{width:76px;text-align:right;padding:8px}
-.preview{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#eef2f7;font-size:12px;font-weight:700}
+.stack{display:grid;gap:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.summaryBox{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.mini{background:#f9fafb;border:1px solid var(--line);border-radius:14px;padding:10px}
+.mini .k{font-size:12px;color:var(--muted)} .mini .v{font-size:18px;font-weight:900;margin-top:3px}
+.notice{margin-top:10px;padding:10px 12px;border:1px solid #c7d2fe;background:var(--soft);border-radius:14px;font-size:13px;line-height:1.5}
 .hide{display:none}
-.pickerGrid{display:grid;grid-template-columns:1fr 1fr 140px 120px auto;gap:8px;align-items:end}
-.notice{margin-top:10px;padding:10px 12px;border:1px solid #c7d2fe;background:var(--soft);border-radius:12px;font-size:13px}
-tr.flash{background:#ecfeff}
-@media (max-width:980px){.grid{grid-template-columns:1fr}.summaryBox{grid-template-columns:repeat(2,1fr)}.pickerGrid{grid-template-columns:1fr 1fr 1fr}}
+.rowCard{
+  border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:10px;background:#fff;
+}
+.rowHead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.name{font-size:15px;font-weight:800;line-height:1.4}
+.meta{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.price{font-size:13px;font-weight:800;white-space:nowrap}
+.qtyGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.qtyBox{background:#f9fafb;border:1px solid var(--line);border-radius:14px;padding:8px}
+.qtyBox .k{font-size:11px;color:var(--muted);margin-bottom:6px}
+.qtyBox input{
+  width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px;
+  text-align:right;font-size:18px;background:#fff;
+}
+.totalRow{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.delBtn{width:100%;margin-top:10px}
+.flash{background:#ecfeff}
+.stickyBar{
+  position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(245,247,251,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.stickyInner{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quickBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.quickBtns button{padding:10px 0;min-height:42px;font-size:15px}
+@media (min-width:761px){
+  .wrap{padding-bottom:24px}
+  .stickyBar{position:static;padding:0;background:transparent;border-top:none;backdrop-filter:none}
+  .stickyInner{max-width:none;display:flex;gap:10px;margin-top:12px}
+  .stickyInner button{flex:1}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>部材拾い出し＋Excel変換 一体版</h1>
-<div class="sub">A列の品目グループ名とC列の品目名をプルダウンで選び、日付も 5日 / 15日 / 25日 から選択。選んだ日付の列だけに数量を入れます。</div>
+  <h1>部材拾い出し＋Excel変換</h1>
+  <div class="sub">スマホで使いやすいように、大きい入力欄・1画面1動作・下固定ボタンにしています。</div>
 
-<div class="grid">
-<div class="card">
-<div class="pill">手順 1</div>
-<label for="xlsxFile">元のExcelファイル（.xlsx）</label>
-<input type="file" id="xlsxFile" accept=".xlsx" />
+  <div class="card">
+    <div class="pill">手順 1</div>
+    <label for="xlsxFile">元のExcelファイル（.xlsx）</label>
+    <input type="file" id="xlsxFile" accept=".xlsx" />
 
-<div class="pill" style="margin-top:14px;">手順 2</div>
-<label for="companyName">会社名</label>
-<input type="text" id="companyName" placeholder="例：株式会社○○" />
+    <label for="companyName">会社名</label>
+    <input type="text" id="companyName" placeholder="例：株式会社○○" />
 
-<div class="footerBar">
-<button id="loadBtn">Excelを読み込む</button>
-<button id="clearBtn" class="ghost">数量を全部クリア</button>
-</div>
+    <div class="two" style="margin-top:10px">
+      <button id="loadBtn">Excelを読み込む</button>
+      <button id="clearBtn" class="ghost">数量を全部クリア</button>
+    </div>
 
-<div id="loadStatus" class="status"></div>
+    <div id="loadStatus" class="status"></div>
 
-<div class="summaryBox">
-<div class="mini"><div class="k">読込件数</div><div class="v" id="sumItems">0</div></div>
-<div class="mini"><div class="k">拾い出し件数</div><div class="v" id="sumSelected">0</div></div>
-<div class="mini"><div class="k">概算合計</div><div class="v" id="sumTotal">¥0</div></div>
-<div class="mini"><div class="k">会社名</div><div class="v" id="sumCompany">-</div></div>
-</div>
+    <div class="summaryBox">
+      <div class="mini"><div class="k">読込件数</div><div class="v" id="sumItems">0</div></div>
+      <div class="mini"><div class="k">拾い出し件数</div><div class="v" id="sumSelected">0</div></div>
+      <div class="mini"><div class="k">概算合計</div><div class="v" id="sumTotal">¥0</div></div>
+      <div class="mini"><div class="k">会社名</div><div class="v" id="sumCompany">-</div></div>
+    </div>
+  </div>
 
-<div class="pill" style="margin-top:14px;">手順 4</div>
-<div class="footerBar">
-<button id="downloadExcelBtn" disabled>提出用Excelを書き出す</button>
-<button id="downloadCsvBtn" class="secondary" disabled>拾い出しCSV</button>
-</div>
-<div class="small">画面では品目名の頭に番号を付けます。ExcelとCSVへ書き出すときは番号を消して元の品目名で出力します。</div>
+  <div class="card">
+    <div class="pill">手順 2</div>
+    <label for="groupPicker">品目グループ名</label>
+    <select id="groupPicker"><option value="">先にExcelを読み込んでください</option></select>
 
-<div class="preview hide" id="previewBox">
-<table>
-<thead><tr><th>グループ</th><th>品目コード</th><th>品目名</th><th class="num">5日</th><th class="num">15日</th><th class="num">25日</th></tr></thead>
-<tbody id="previewBody"></tbody>
-</table>
-</div>
-</div>
+    <label for="itemPicker">品目名</label>
+    <select id="itemPicker"><option value="">先にグループを選んでください</option></select>
 
-<div class="card">
-<div class="pill">手順 3</div>
-<div class="pickerGrid" style="margin-top:10px;">
-<div>
-<label for="groupPicker">品目グループ名（A列）</label>
-<select id="groupPicker"><option value="">先にExcelを読み込んでください</option></select>
-</div>
-<div>
-<label for="itemPicker">品目名（C列）</label>
-<select id="itemPicker"><option value="">先にグループを選んでください</option></select>
-</div>
-<div>
-<label for="dayPicker">日付</label>
-<select id="dayPicker">
-  <option value="5">5日</option>
-  <option value="15">15日</option>
-  <option value="25">25日</option>
-</select>
-</div>
-<div>
-<label for="qtyOne">数量</label>
-<input type="text" id="qtyOne" inputmode="numeric" placeholder="0">
-</div>
-<div>
-<label>&nbsp;</label>
-<button id="addBtn">拾い出しに追加</button>
-</div>
+    <div class="two">
+      <div>
+        <label for="dayPicker">日付</label>
+        <select id="dayPicker">
+          <option value="5">5日</option>
+          <option value="15">15日</option>
+          <option value="25">25日</option>
+        </select>
+      </div>
+      <div>
+        <label for="qtyOne">数量</label>
+        <input type="text" id="qtyOne" inputmode="numeric" placeholder="0">
+      </div>
+    </div>
+
+    <div class="quickBtns">
+      <button type="button" class="ghost quickAdd" data-add="1">+1</button>
+      <button type="button" class="ghost quickAdd" data-add="5">+5</button>
+      <button type="button" class="ghost quickAdd" data-add="10">+10</button>
+      <button type="button" class="ghost" id="qtyClearBtn">クリア</button>
+    </div>
+
+    <div id="mergeNotice" class="notice hide"></div>
+  </div>
+
+  <div class="card">
+    <div class="pill">拾い出し結果</div>
+    <div class="small" style="margin-top:8px">同じ品目を追加すると、新しい行は作らず既存行に数量を加算します。</div>
+    <div id="pickedList"></div>
+  </div>
 </div>
 
-<div id="mergeNotice" class="notice hide"></div>
-
-<div class="listWrap" style="margin-top:12px;">
-<table>
-<thead><tr><th>グループ</th><th>品目コード</th><th>品目名</th><th class="num">単価</th><th class="num">5日</th><th class="num">15日</th><th class="num">25日</th><th class="num">行合計</th><th>操作</th></tr></thead>
-<tbody id="pickedBody"></tbody>
-</table>
-</div>
-<div class="small" style="margin-top:8px;">同じ品目を追加すると、新しい行は作らず既存行に数量を加算します。</div>
-</div>
-</div>
+<div class="stickyBar">
+  <div class="stickyInner">
+    <button id="addBtn">拾い出しに追加</button>
+    <button id="downloadExcelBtn" class="secondary" disabled>提出用Excelを書き出す</button>
+  </div>
 </div>
 
 <script>
@@ -162,11 +186,6 @@ function refreshSummary(){
   document.getElementById('sumTotal').textContent=yen(total);
   document.getElementById('sumCompany').textContent=document.getElementById('companyName').value.trim()||'-';
   document.getElementById('downloadExcelBtn').disabled=!originalWorkbook||pickedItems.length===0;
-  document.getElementById('downloadCsvBtn').disabled=pickedItems.length===0;
-  const previewBody=document.getElementById('previewBody');
-  const previewBox=document.getElementById('previewBox');
-  previewBody.innerHTML=pickedItems.map(x=>`<tr><td>${esc(x.group)}</td><td>${esc(x.code)}</td><td>${esc(x.displayName)}</td><td class="num">${x.d5||''}</td><td class="num">${x.d15||''}</td><td class="num">${x.d25||''}</td></tr>`).join('');
-  previewBox.classList.toggle('hide',pickedItems.length===0);
 }
 function renderGroupPicker(){
   const groups=[...new Set(allItems.map(x=>x.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));
@@ -185,14 +204,67 @@ function showMergeNotice(html){
   box.innerHTML=html;
   box.classList.remove('hide');
 }
-function hideMergeNotice(){
-  document.getElementById('mergeNotice').classList.add('hide');
-}
-function renderPickedTable(){
-  const body=document.getElementById('pickedBody');
-  body.innerHTML=pickedItems.map((x,idx)=>`<tr id="picked-row-${idx}" class="${lastFlashRow===idx?'flash':''}"><td>${esc(x.group)}</td><td>${esc(x.code)}</td><td>${esc(x.displayName)}</td><td class="num">${yen(x.price)}</td><td class="num"><input class="qtyEdit" data-idx="${idx}" data-day="5" value="${x.d5||''}" inputmode="numeric"></td><td class="num"><input class="qtyEdit" data-idx="${idx}" data-day="15" value="${x.d15||''}" inputmode="numeric"></td><td class="num"><input class="qtyEdit" data-idx="${idx}" data-day="25" value="${x.d25||''}" inputmode="numeric"></td><td class="num">${yen(x.price*((x.d5||0)+(x.d15||0)+(x.d25||0)))}</td><td><button class="ghost delBtn" data-idx="${idx}">削除</button></td></tr>`).join('');
-  body.querySelectorAll('.qtyEdit').forEach(el=>{el.addEventListener('input',e=>{const idx=Number(e.target.dataset.idx);const day=e.target.dataset.day;const n=Math.max(0,parseInt(e.target.value||'0',10)||0);if(day==='5')pickedItems[idx].d5=n;if(day==='15')pickedItems[idx].d15=n;if(day==='25')pickedItems[idx].d25=n;lastFlashRow=idx;renderPickedTable();refreshSummary();setTimeout(()=>{lastFlashRow=null;renderPickedTable();},450);})});
-  body.querySelectorAll('.delBtn').forEach(el=>{el.addEventListener('click',e=>{const idx=Number(e.target.dataset.idx);pickedItems.splice(idx,1);lastFlashRow=null;renderPickedTable();refreshSummary();})});
+function hideMergeNotice(){ document.getElementById('mergeNotice').classList.add('hide'); }
+function renderPickedList(){
+  const root=document.getElementById('pickedList');
+  if(!pickedItems.length){
+    root.innerHTML='<div class="small" style="padding:10px 0">まだ追加されていません。</div>';
+    return;
+  }
+  root.innerHTML=pickedItems.map((x,idx)=>`
+    <div class="rowCard ${lastFlashRow===idx?'flash':''}" id="picked-row-${idx}">
+      <div class="rowHead">
+        <div>
+          <div class="name">${esc(x.displayName)}</div>
+          <div class="meta">${esc(x.group)} / ${esc(x.code)}</div>
+        </div>
+        <div class="price">${yen(x.price)}</div>
+      </div>
+      <div class="qtyGrid">
+        <div class="qtyBox">
+          <div class="k">5日</div>
+          <input class="qtyEdit" data-idx="${idx}" data-day="5" value="${x.d5||''}" inputmode="numeric">
+        </div>
+        <div class="qtyBox">
+          <div class="k">15日</div>
+          <input class="qtyEdit" data-idx="${idx}" data-day="15" value="${x.d15||''}" inputmode="numeric">
+        </div>
+        <div class="qtyBox">
+          <div class="k">25日</div>
+          <input class="qtyEdit" data-idx="${idx}" data-day="25" value="${x.d25||''}" inputmode="numeric">
+        </div>
+      </div>
+      <div class="totalRow">
+        <strong>行合計</strong>
+        <strong>${yen(x.price*((x.d5||0)+(x.d15||0)+(x.d25||0)))}</strong>
+      </div>
+      <button class="ghost delBtn delBtn" data-idx="${idx}">この行を削除</button>
+    </div>
+  `).join('');
+
+  root.querySelectorAll('.qtyEdit').forEach(el=>{
+    el.addEventListener('input',e=>{
+      const idx=Number(e.target.dataset.idx);
+      const day=e.target.dataset.day;
+      const n=Math.max(0,parseInt(e.target.value||'0',10)||0);
+      if(day==='5')pickedItems[idx].d5=n;
+      if(day==='15')pickedItems[idx].d15=n;
+      if(day==='25')pickedItems[idx].d25=n;
+      lastFlashRow=idx;
+      renderPickedList();
+      refreshSummary();
+      setTimeout(()=>{lastFlashRow=null;renderPickedList();},350);
+    });
+  });
+  root.querySelectorAll('.delBtn').forEach(el=>{
+    el.addEventListener('click',e=>{
+      const idx=Number(e.target.dataset.idx);
+      pickedItems.splice(idx,1);
+      lastFlashRow=null;
+      renderPickedList();
+      refreshSummary();
+    });
+  });
 }
 function loadWorkbook(){
   const file=document.getElementById('xlsxFile').files[0];
@@ -206,9 +278,8 @@ function loadWorkbook(){
     const names=findSheetNames(originalWorkbook); sheet1Name=names.s1; sheet2Name=names.s2;
     const sheet1=originalWorkbook.Sheets[sheet1Name];
     allItems=buildItemsFromSheet1(sheet1);
-    pickedItems=[];
-    lastFlashRow=null;
-    renderGroupPicker(); renderPickedTable(); refreshSummary(); hideMergeNotice();
+    pickedItems=[]; lastFlashRow=null;
+    renderGroupPicker(); renderPickedList(); refreshSummary(); hideMergeNotice();
     status.innerHTML=`<span class="ok">読込完了。</span> ${sheet1Name} から ${allItems.length} 件読み込みました。`;
   }catch(err){status.innerHTML=`<span class="danger">エラー: ${esc(err.message)}</span>`;}}
   reader.readAsArrayBuffer(file);
@@ -217,7 +288,6 @@ function addPickedItem(){
   const itemValue=document.getElementById('itemPicker').value;
   const day=document.getElementById('dayPicker').value;
   const qty=Math.max(0,parseInt(document.getElementById('qtyOne').value||'0',10)||0);
-
   if(!itemValue){alert('品目名を選んでください。');return;}
   if(qty===0){alert('数量を入れてください。');return;}
 
@@ -231,7 +301,7 @@ function addPickedItem(){
     if(day==='15') pickedItems[existsIndex].d15 += qty;
     if(day==='25') pickedItems[existsIndex].d25 += qty;
     lastFlashRow=existsIndex;
-    showMergeNotice(`<span class="info">同じ品目がすでにあるため、既存行に加算しました。</span><br>${esc(base.displayName)}<br>${day}日へ ${qty} 追加`);
+    showMergeNotice(`<span class="info">同じ品目があるので既存行に加算しました。</span><br>${esc(base.displayName)}<br>${day}日へ ${qty} 追加`);
   } else {
     pickedItems.push({
       rowNumber:base.rowNumber,group:base.group,code:base.code,rawName:base.rawName,displayName:base.displayName,price:base.price,
@@ -244,42 +314,60 @@ function addPickedItem(){
   }
 
   document.getElementById('qtyOne').value='';
-  renderPickedTable();
+  renderPickedList();
   refreshSummary();
-  const tr=document.getElementById('picked-row-'+lastFlashRow);
-  if(tr){tr.scrollIntoView({behavior:'smooth',block:'nearest'});}
-  setTimeout(()=>{lastFlashRow=null;renderPickedTable();},700);
+  const card=document.getElementById('picked-row-'+lastFlashRow);
+  if(card){card.scrollIntoView({behavior:'smooth',block:'center'});}
+  setTimeout(()=>{lastFlashRow=null;renderPickedList();},700);
 }
-function clearAllQty(){pickedItems=[]; lastFlashRow=null; renderPickedTable(); refreshSummary(); hideMergeNotice()}
+function clearAllQty(){
+  pickedItems=[]; lastFlashRow=null;
+  renderPickedList(); refreshSummary(); hideMergeNotice();
+}
 function writeWorkbookAndDownload(){
   if(!originalWorkbook){alert('先にExcelを読み込んでください。');return;}
   const wb=XLSX.read(XLSX.write(originalWorkbook,{type:'array',bookType:'xlsx'}),{type:'array',cellFormula:true,cellStyles:true});
   const sheet1=wb.Sheets[sheet1Name], sheet2=wb.Sheets[sheet2Name];
-  allItems.forEach(item=>{setCell(sheet1,'E'+item.rowNumber,{t:'n',v:0});setCell(sheet1,'F'+item.rowNumber,{t:'n',v:0});setCell(sheet1,'G'+item.rowNumber,{t:'n',v:0});sheet1['H'+item.rowNumber]={t:'n',f:`IFERROR(D${item.rowNumber}*SUM(E${item.rowNumber}:G${item.rowNumber}),0)`};});
-  pickedItems.forEach(item=>{setCell(sheet1,'E'+item.rowNumber,{t:'n',v:item.d5||0});setCell(sheet1,'F'+item.rowNumber,{t:'n',v:item.d15||0});setCell(sheet1,'G'+item.rowNumber,{t:'n',v:item.d25||0});});
+  allItems.forEach(item=>{
+    setCell(sheet1,'E'+item.rowNumber,{t:'n',v:0});
+    setCell(sheet1,'F'+item.rowNumber,{t:'n',v:0});
+    setCell(sheet1,'G'+item.rowNumber,{t:'n',v:0});
+    sheet1['H'+item.rowNumber]={t:'n',f:`IFERROR(D${item.rowNumber}*SUM(E${item.rowNumber}:G${item.rowNumber}),0)`};
+  });
+  pickedItems.forEach(item=>{
+    setCell(sheet1,'E'+item.rowNumber,{t:'n',v:item.d5||0});
+    setCell(sheet1,'F'+item.rowNumber,{t:'n',v:item.d15||0});
+    setCell(sheet1,'G'+item.rowNumber,{t:'n',v:item.d25||0});
+  });
   const maxRows=Math.max(pickedItems.length+5,300);
   for(let r=2;r<=maxRows;r++){['A','B','C','D','E','F'].forEach(col=>setCell(sheet2,col+r,{t:'s',v:''}));}
-  pickedItems.forEach((x,idx)=>{const r=idx+2; const totalQty=(x.d5||0)+(x.d15||0)+(x.d25||0); setCell(sheet2,'A'+r,{t:'s',v:x.group}); setCell(sheet2,'B'+r,{t:'s',v:x.rawName}); setCell(sheet2,'C'+r,{t:'n',v:totalQty});});
+  pickedItems.forEach((x,idx)=>{
+    const r=idx+2, totalQty=(x.d5||0)+(x.d15||0)+(x.d25||0);
+    setCell(sheet2,'A'+r,{t:'s',v:x.group});
+    setCell(sheet2,'B'+r,{t:'s',v:x.rawName});
+    setCell(sheet2,'C'+r,{t:'n',v:totalQty});
+  });
   const companyCell=findCompanyCell(sheet1), totalCell=findTotalCell(sheet1), companyName=document.getElementById('companyName').value.trim();
   if(companyName){setCell(sheet1,companyCell,{t:'s',v:companyName});}
   sheet1[totalCell]={t:'n',f:'SUM(H:H)'};
   const baseName=(document.getElementById('xlsxFile').files[0]?.name||'提出要部材購入').replace(/\.xlsx$/i,'');
   XLSX.writeFile(wb, `${baseName}_${companyName||'会社名なし'}_更新.xlsx`);
 }
-function downloadCsv(){
-  if(!pickedItems.length) return;
-  const header=['品目グループ名','品目コード','品目名','単価','5日数量','15日数量','25日数量','行合計'];
-  const rows=pickedItems.map(x=>[x.group,x.code,x.rawName,x.price,x.d5,x.d15,x.d25,x.price*((x.d5||0)+(x.d15||0)+(x.d25||0))]);
-  const csv=[header,...rows].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
-  const blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='拾い出し一覧.csv'; a.click(); URL.revokeObjectURL(a.href);
-}
+
 document.getElementById('loadBtn').addEventListener('click',loadWorkbook);
 document.getElementById('clearBtn').addEventListener('click',clearAllQty);
 document.getElementById('groupPicker').addEventListener('change',renderItemPicker);
 document.getElementById('addBtn').addEventListener('click',addPickedItem);
 document.getElementById('downloadExcelBtn').addEventListener('click',writeWorkbookAndDownload);
-document.getElementById('downloadCsvBtn').addEventListener('click',downloadCsv);
 document.getElementById('companyName').addEventListener('input',refreshSummary);
+document.getElementById('qtyClearBtn').addEventListener('click',()=>{document.getElementById('qtyOne').value='';});
+document.querySelectorAll('.quickAdd').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const el=document.getElementById('qtyOne');
+    const cur=Math.max(0,parseInt(el.value||'0',10)||0);
+    el.value=cur + Number(btn.dataset.add);
+  });
+});
 </script>
 </body>
 </html>
