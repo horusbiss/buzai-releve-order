@@ -4,13 +4,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>部材拾い出し＋Excel変換 一体版 v8.1 fix</title>
+<title>部材拾い出し＋Excel変換 v9</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#111827;--ok:#166534;--danger:#b91c1c;--info:#1d4ed8;--soft:#eef2ff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.wrap{max-width:760px;margin:0 auto;padding:12px 12px 110px}
+.wrap{max-width:760px;margin:0 auto;padding:12px 12px 120px}
 h1{font-size:22px;line-height:1.3;margin:0 0 6px}
 .sub{color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 1px 1px rgba(0,0,0,.02)}
@@ -48,13 +48,18 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .quickBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
 .quickBtns button{padding:10px 0;min-height:42px;font-size:15px}
 .linkBox{margin-top:10px;padding:10px 12px;background:#f9fafb;border:1px solid var(--line);border-radius:14px;word-break:break-all}
-@media (min-width:761px){.wrap{padding-bottom:24px}.stickyBar{position:static;padding:0;background:transparent;border-top:none;backdrop-filter:none}.stickyInner,.stickyInner2{max-width:none;display:flex;gap:10px;margin-top:12px}.stickyInner button,.stickyInner2 button{flex:1}}
+@media (min-width:761px){
+ .wrap{padding-bottom:24px}
+ .stickyBar{position:static;padding:0;background:transparent;border-top:none;backdrop-filter:none}
+ .stickyInner,.stickyInner2{max-width:none;display:flex;gap:10px;margin-top:12px}
+ .stickyInner button,.stickyInner2 button{flex:1}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>部材拾い出し＋Excel変換</h1>
-  <div class="sub">読み込み不具合を修正した版です。</div>
+  <div class="sub">Sheet1のみ対応。3行目からデータを読み込みます。A1/B1の色や既存の数式はできるだけ維持し、必要なセルだけ更新します。</div>
 
   <div class="card">
     <div class="pill">手順 1</div>
@@ -75,6 +80,12 @@ button:disabled{opacity:.55;cursor:not-allowed}
     </div>
     <div id="saveStatus" class="status"></div>
     <div id="manualLinkBox" class="linkBox hide"></div>
+    <div class="small" style="margin-top:8px">
+      メール宛先固定: <strong>horus2018since@gmail.com</strong><br>
+      データ開始行: <strong>3行目</strong><br>
+      数量反映先: <strong>5日→E列 / 15日→F列 / 25日→G列</strong><br>
+      会社名反映先: <strong>C1</strong>
+    </div>
   </div>
 
   <div class="card">
@@ -85,23 +96,29 @@ button:disabled{opacity:.55;cursor:not-allowed}
       <option value="15">15日</option>
       <option value="25">25日</option>
     </select>
+
     <label for="groupPicker">品目グループ名</label>
     <select id="groupPicker"><option value="">先にExcelを読み込んでください</option></select>
+
     <label for="itemPicker">品目名</label>
     <select id="itemPicker"><option value="">先にグループを選んでください</option></select>
+
     <label for="qtyOne">数量</label>
     <input type="text" id="qtyOne" inputmode="numeric" placeholder="0">
+
     <div class="quickBtns">
       <button type="button" class="ghost quickAdd" data-add="1">+1</button>
       <button type="button" class="ghost quickAdd" data-add="5">+5</button>
       <button type="button" class="ghost quickAdd" data-add="10">+10</button>
       <button type="button" class="ghost" id="qtyClearBtn">クリア</button>
     </div>
+
     <div id="mergeNotice" class="notice hide"></div>
   </div>
 
   <div class="card">
     <div class="pill">拾い出し結果</div>
+    <div class="small" style="margin-top:8px">同じ品目を追加すると、新しい行は作らず既存行に数量を加算します。</div>
     <div id="pickedList"></div>
   </div>
 </div>
@@ -119,9 +136,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
 
 <script>
 const FIXED_EMAIL = 'horus2018since@gmail.com';
+const DATA_START_ROW = 3;
+
 let originalWorkbook = null;
 let sheet1Name = 'Sheet1';
-let sheet2Name = 'Sheet2';
 let allItems = [];
 let pickedItems = [];
 let lastFlashRow = null;
@@ -129,7 +147,11 @@ let currentDownloadUrl = null;
 
 function yen(n){ return '¥' + Number(n || 0).toLocaleString('ja-JP'); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-function parseRows(sheet){ return XLSX.utils.sheet_to_json(sheet, {header:1, defval:''}); }
+
+function parseRows(sheet){
+  return XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+}
+
 function setCellPreserve(sheet, addr, value, type){
   const cell = sheet[addr] || {};
   sheet[addr] = Object.assign({}, cell, { t: type, v: value });
@@ -141,36 +163,28 @@ function setCellPreserve(sheet, addr, value, type){
   if (decoded.c < range.s.c) range.s.c = decoded.c;
   sheet['!ref'] = XLSX.utils.encode_range(range);
 }
+
 function clearCellValuePreserveStyle(sheet, addr){
   const cell = sheet[addr] || {};
   sheet[addr] = Object.assign({}, cell, { t: 's', v: '' });
 }
-function findSheetNames(workbook){
+
+function findSheet1Name(workbook){
   const names = workbook.SheetNames;
-  const s1 = names.find(n => /^sheet1$/i.test(n)) || names[0];
-  const s2 = names.find(n => /^sheet2$/i.test(n)) || names[1] || names[0];
-  return { s1, s2 };
+  return names.find(n => /^sheet1$/i.test(n)) || names[0];
 }
-function findCompanyCell(sheet){
-  const rows = parseRows(sheet);
-  for (let r = 0; r < Math.min(rows.length, 8); r++) {
-    for (let c = 0; c < Math.min((rows[r] || []).length, 8); c++) {
-      const v = String(rows[r][c] ?? '');
-      if (v.includes('ここに会社名')) return XLSX.utils.encode_cell({ r, c });
-    }
-  }
-  return 'C1';
-}
+
 function buildItemsFromSheet1(sheet){
   const rows = parseRows(sheet);
   const out = [];
   let displayNo = 1;
-  for (let i = 1; i < rows.length; i++) {
-    const group = rows[i][0];
-    const code = rows[i][1];
-    const name = rows[i][2];
-    const price = rows[i][3];
-    if (String(name).trim() === '') continue;
+  for (let i = DATA_START_ROW - 1; i < rows.length; i++) {
+    const row = rows[i] || [];
+    const group = row[0];
+    const code = row[1];
+    const name = row[2];
+    const price = row[3];
+    if (String(name ?? '').trim() === '') continue;
     out.push({
       rowNumber: i + 1,
       group: String(group ?? ''),
@@ -183,6 +197,7 @@ function buildItemsFromSheet1(sheet){
   }
   return out;
 }
+
 function refreshSummary(){
   const total = pickedItems.reduce((s, x) => s + x.price * ((x.d5 || 0) + (x.d15 || 0) + (x.d25 || 0)), 0);
   document.getElementById('sumItems').textContent = allItems.length;
@@ -194,24 +209,30 @@ function refreshSummary(){
   document.getElementById('shareExcelBtn').disabled = !enabled;
   document.getElementById('mailBtn').disabled = !enabled;
 }
+
 function renderGroupPicker(){
   const groups = [...new Set(allItems.map(x => x.group).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja'));
   const sel = document.getElementById('groupPicker');
   sel.innerHTML = '<option value="">選んでください</option>' + groups.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
   document.getElementById('itemPicker').innerHTML = '<option value="">先にグループを選んでください</option>';
 }
+
 function renderItemPicker(){
   const group = document.getElementById('groupPicker').value;
   const list = allItems.filter(x => x.group === group);
   const sel = document.getElementById('itemPicker');
   sel.innerHTML = '<option value="">選んでください</option>' + list.map(x => `<option value="${x.rowNumber}">${esc(x.displayName)}</option>`).join('');
 }
+
 function showMergeNotice(html){
   const box = document.getElementById('mergeNotice');
   box.innerHTML = html;
   box.classList.remove('hide');
 }
-function hideMergeNotice(){ document.getElementById('mergeNotice').classList.add('hide'); }
+function hideMergeNotice(){
+  document.getElementById('mergeNotice').classList.add('hide');
+}
+
 function renderPickedList(){
   const root = document.getElementById('pickedList');
   if (!pickedItems.length) {
@@ -236,6 +257,7 @@ function renderPickedList(){
       <button class="ghost delBtn" data-idx="${idx}">この行を削除</button>
     </div>
   `).join('');
+
   root.querySelectorAll('.qtyEdit').forEach(el => {
     el.addEventListener('input', e => {
       const idx = Number(e.target.dataset.idx);
@@ -251,6 +273,7 @@ function renderPickedList(){
       setTimeout(() => { lastFlashRow = null; renderPickedList(); }, 350);
     });
   });
+
   root.querySelectorAll('.delBtn').forEach(el => {
     el.addEventListener('click', e => {
       const idx = Number(e.target.dataset.idx);
@@ -262,6 +285,7 @@ function renderPickedList(){
     });
   });
 }
+
 function clearPreparedFile(){
   document.getElementById('saveStatus').textContent = '';
   const box = document.getElementById('manualLinkBox');
@@ -272,6 +296,7 @@ function clearPreparedFile(){
     currentDownloadUrl = null;
   }
 }
+
 function loadWorkbook(){
   const file = document.getElementById('xlsxFile').files[0];
   const status = document.getElementById('loadStatus');
@@ -280,38 +305,53 @@ function loadWorkbook(){
     return;
   }
   status.textContent = '読み込み中…';
+
   const reader = new FileReader();
+  reader.onerror = () => {
+    status.innerHTML = '<span class="danger">ファイルの読み込みに失敗しました。</span>';
+  };
   reader.onload = e => {
     try {
       const data = new Uint8Array(e.target.result);
-      originalWorkbook = XLSX.read(data, { type: 'array', cellFormula: true, cellStyles: true });
-      const names = findSheetNames(originalWorkbook);
-      sheet1Name = names.s1;
-      sheet2Name = names.s2;
-      allItems = buildItemsFromSheet1(originalWorkbook.Sheets[sheet1Name]);
+      originalWorkbook = XLSX.read(data, {
+        type: 'array',
+        cellFormula: true,
+        cellStyles: true
+      });
+      sheet1Name = findSheet1Name(originalWorkbook);
+      const sheet1 = originalWorkbook.Sheets[sheet1Name];
+      if (!sheet1) throw new Error('Sheet1 が見つかりません。');
+
+      allItems = buildItemsFromSheet1(sheet1);
       pickedItems = [];
       lastFlashRow = null;
+
       renderGroupPicker();
       renderPickedList();
       refreshSummary();
       hideMergeNotice();
       clearPreparedFile();
+
       status.innerHTML = `<span class="ok">読込完了。</span> ${sheet1Name} から ${allItems.length} 件読み込みました。`;
     } catch (err) {
-      status.innerHTML = `<span class="danger">エラー: ${esc(err.message || String(err))}</span>`;
+      status.innerHTML = `<span class="danger">エラー: ${esc(err && err.message ? err.message : String(err))}</span>`;
     }
   };
   reader.readAsArrayBuffer(file);
 }
+
 function addPickedItem(){
   const itemValue = document.getElementById('itemPicker').value;
   const day = document.getElementById('dayPicker').value;
   const qty = Math.max(0, parseInt(document.getElementById('qtyOne').value || '0', 10) || 0);
+
   if (!itemValue) { alert('品目名を選んでください。'); return; }
   if (qty === 0) { alert('数量を入れてください。'); return; }
+
   const rowNumber = Number(itemValue);
   const base = allItems.find(x => x.rowNumber === rowNumber);
   if (!base) { alert('品目が見つかりません。'); return; }
+
   const existsIndex = pickedItems.findIndex(x => x.rowNumber === base.rowNumber);
   if (existsIndex >= 0) {
     if (day === '5') pickedItems[existsIndex].d5 += qty;
@@ -334,6 +374,7 @@ function addPickedItem(){
     lastFlashRow = pickedItems.length - 1;
     showMergeNotice(`<span class="info">追加しました。</span><br>${esc(base.displayName)}<br>${day}日へ ${qty} 入力`);
   }
+
   document.getElementById('qtyOne').value = '';
   renderPickedList();
   refreshSummary();
@@ -342,6 +383,7 @@ function addPickedItem(){
   if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
   setTimeout(() => { lastFlashRow = null; renderPickedList(); }, 700);
 }
+
 function clearAllQty(){
   pickedItems = [];
   lastFlashRow = null;
@@ -350,37 +392,33 @@ function clearAllQty(){
   hideMergeNotice();
   clearPreparedFile();
 }
+
 function buildWorkbook(){
-  const wb = XLSX.read(XLSX.write(originalWorkbook, { type: 'array', bookType: 'xlsx', cellStyles: true }), { type: 'array', cellFormula: true, cellStyles: true });
+  const wb = XLSX.read(
+    XLSX.write(originalWorkbook, { type: 'array', bookType: 'xlsx', cellStyles: true }),
+    { type: 'array', cellFormula: true, cellStyles: true }
+  );
+
   const sheet1 = wb.Sheets[sheet1Name];
-  const sheet2 = wb.Sheets[sheet2Name];
+
   pickedItems.forEach(item => {
     setCellPreserve(sheet1, 'E' + item.rowNumber, item.d5 || 0, 'n');
     setCellPreserve(sheet1, 'F' + item.rowNumber, item.d15 || 0, 'n');
     setCellPreserve(sheet1, 'G' + item.rowNumber, item.d25 || 0, 'n');
   });
-  const companyCell = findCompanyCell(sheet1);
+
   const companyName = document.getElementById('companyName').value.trim();
-  if (companyName) setCellPreserve(sheet1, companyCell, companyName, 's');
-  const maxRows = Math.max(pickedItems.length + 5, 300);
-  for (let r = 2; r <= maxRows; r++) {
-    clearCellValuePreserveStyle(sheet2, 'A' + r);
-    clearCellValuePreserveStyle(sheet2, 'B' + r);
-    clearCellValuePreserveStyle(sheet2, 'C' + r);
+  if (companyName) {
+    setCellPreserve(sheet1, 'C1', companyName, 's');
   }
-  pickedItems.forEach((x, idx) => {
-    const r = idx + 2;
-    const totalQty = (x.d5 || 0) + (x.d15 || 0) + (x.d25 || 0);
-    setCellPreserve(sheet2, 'A' + r, x.group, 's');
-    setCellPreserve(sheet2, 'B' + r, x.rawName, 's');
-    setCellPreserve(sheet2, 'C' + r, totalQty, 'n');
-  });
+
   if (!wb.Workbook) wb.Workbook = {};
   if (!wb.Workbook.CalcPr) wb.Workbook.CalcPr = {};
   wb.Workbook.CalcPr.fullCalcOnLoad = "1";
   wb.Workbook.CalcPr.forceFullCalc = "1";
   return wb;
 }
+
 function buildOrderBody(){
   const lines = ['お世話になっております。', '', '以下の部材を発注いたします。', ''];
   pickedItems.forEach((x, idx) => {
@@ -393,17 +431,21 @@ function buildOrderBody(){
   lines.push('', '添付ファイルをご確認ください。', '', document.getElementById('companyName').value.trim() || '');
   return lines.join('\n');
 }
+
 function prepareFile(){
   if (!originalWorkbook) throw new Error('先にExcelを読み込んでください。');
   if (!pickedItems.length) throw new Error('拾い出し結果がありません。');
+
   const wb = buildWorkbook();
   const companyName = document.getElementById('companyName').value.trim();
   const baseName = (document.getElementById('xlsxFile').files[0]?.name || '提出要部材購入').replace(/\.xlsx$/i, '');
   const filename = `${baseName}_${companyName || '会社名なし'}_更新.xlsx`;
+
   const array = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
   const blob = new Blob([array], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   return { blob, filename };
 }
+
 function showManualLink(blob, filename){
   if (currentDownloadUrl) URL.revokeObjectURL(currentDownloadUrl);
   currentDownloadUrl = URL.createObjectURL(blob);
@@ -411,6 +453,7 @@ function showManualLink(blob, filename){
   box.innerHTML = `保存や共有が始まらない場合は、<a href="${currentDownloadUrl}" download="${filename}">ここをタップ</a>`;
   box.classList.remove('hide');
 }
+
 function downloadFile(){
   try {
     const { blob, filename } = prepareFile();
@@ -426,17 +469,20 @@ function downloadFile(){
     document.getElementById('saveStatus').innerHTML = `<span class="danger">保存エラー: ${esc(err.message || String(err))}</span>`;
   }
 }
+
 async function shareFile(){
   try {
     const { blob, filename } = prepareFile();
     showManualLink(blob, filename);
     const file = new File([blob], filename, { type: blob.type, lastModified: Date.now() });
     const body = buildOrderBody();
+
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: '部材発注', text: '宛先: ' + FIXED_EMAIL + '\n\n' + body });
       document.getElementById('saveStatus').innerHTML = '<span class="ok">共有シートを開きました。</span>';
       return;
     }
+
     downloadFile();
     document.getElementById('saveStatus').innerHTML = '<span class="info">この端末では直接共有に未対応のため、保存リンクを出しました。</span>';
   } catch (err) {
@@ -447,10 +493,12 @@ async function shareFile(){
     }
   }
 }
+
 async function launchMail(){
   try {
     const body = buildOrderBody();
     const subject = '部材発注の件';
+
     try {
       const { blob, filename } = prepareFile();
       showManualLink(blob, filename);
@@ -461,6 +509,7 @@ async function launchMail(){
         return;
       }
     } catch (_e) {}
+
     window.location.href = 'mailto:' + encodeURIComponent(FIXED_EMAIL) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body + '\n\n※ 添付ファイルは保存リンクから取得してください。');
     const { blob, filename } = prepareFile();
     showManualLink(blob, filename);
@@ -469,6 +518,7 @@ async function launchMail(){
     document.getElementById('saveStatus').innerHTML = `<span class="danger">メール起動エラー: ${esc(err.message || String(err))}</span>`;
   }
 }
+
 document.getElementById('loadBtn').addEventListener('click', loadWorkbook);
 document.getElementById('clearBtn').addEventListener('click', clearAllQty);
 document.getElementById('groupPicker').addEventListener('change', renderItemPicker);
