@@ -3,45 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>部材拾い出し＋Excel変換 v10.6</title>
+<title>部材拾い出し＋Excel変換 v10.8</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f7fb;margin:0;padding:0;color:#111827}
-.wrap{max-width:820px;margin:0 auto;padding:16px 16px 190px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:14px}
-label{font-weight:700;margin-top:10px;display:block}
-input,select,button,textarea{width:100%;padding:12px;margin-top:6px;border-radius:10px;border:1px solid #e5e7eb;font-size:16px;box-sizing:border-box}
-button{background:#111827;color:#fff;font-weight:700;cursor:pointer}
-button.secondary{background:#374151}
-button.ghost{background:#fff;color:#111;border:1px solid #e5e7eb}
-.deleteBtn{background:#ef4444;color:#fff;border:none;border-radius:8px;padding:10px;margin-top:10px;font-weight:700;cursor:pointer;width:100%}
-.deleteBtn:hover{background:#dc2626}
-.small{font-size:12px;color:#6b7280;line-height:1.5}
-.quickBtns{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
-.item{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px}
-.footer{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid #e5e7eb;padding:12px;z-index:1000}
-.footerRow{max-width:820px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.summary{max-width:820px;margin:10px auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;font-weight:700;display:flex;justify-content:space-between}
-.review{margin-top:12px;border:1px solid #e5e7eb;border-radius:12px;padding:12px;display:none}
-.review table{width:100%;border-collapse:collapse}
-.review th,.review td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:left}
-.review .num{text-align:right}
-.linkBox{margin-top:10px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;word-break:break-all;display:none}
-.notice{background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px}
-@media (max-width:700px){
-  .quickBtns{grid-template-columns:repeat(3,1fr)}
-  .footerRow{grid-template-columns:1fr}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#f5f7fb;
+  margin:0;
+  padding:0;
+  color:#111827;
+}
+.wrap{
+  max-width:820px;
+  margin:0 auto;
+  padding:16px 16px 150px;
+}
+.card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px;
+}
+label{
+  font-weight:700;
+  margin-top:10px;
+  display:block;
+}
+input,select,button,textarea{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  font-size:16px;
+  box-sizing:border-box;
+}
+button{
+  background:#111827;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+button.secondary{ background:#374151; }
+button.ghost{
+  background:#fff;
+  color:#111;
+  border:1px solid #e5e7eb;
+}
+
+/* 削除ボタン */
+.deleteBtn{
+  background:#ef4444;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:8px;
+  margin-top:10px;
+  font-weight:700;
+  cursor:pointer;
+  width:100%;
+}
+.deleteBtn:hover{ background:#dc2626; }
+
+.small{
+  font-size:12px;
+  color:#6b7280;
+  line-height:1.5;
+}
+.quickBtns{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  margin-top:8px;
+}
+.item{
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+  margin-top:10px;
+}
+
+/* フッター */
+.footer{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(8px);
+  border-top:1px solid #e5e7eb;
+  padding:8px 12px;
+  z-index:1000;
+}
+.footerRow{
+  max-width:820px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.footerRow button{
+  padding:8px 10px;
+  font-size:14px;
+  min-height:38px;
+}
+.summary{
+  max-width:820px;
+  margin:8px auto 0;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:10px 12px;
+  font-weight:700;
+  display:flex;
+  justify-content:space-between;
+  font-size:14px;
+}
+
+/* 確認一覧 */
+.review{
+  margin-top:12px;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+  display:block;
+}
+.review table{
+  width:100%;
+  border-collapse:collapse;
+}
+.review th,.review td{
+  border-bottom:1px solid #e5e7eb;
+  padding:8px;
+  text-align:left;
+}
+.review .num{ text-align:right; }
+
+.linkBox{
+  margin-top:10px;
+  padding:10px 12px;
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  word-break:break-all;
+  display:none;
+}
+
+.notice{
+  background:#eef2ff;
+  border:1px solid #c7d2fe;
+  border-radius:12px;
+  padding:10px 12px;
+  margin-top:10px;
+  font-size:13px;
 }
 </style>
 </head>
+
 <body>
 <div class="wrap">
 
+  <!-- Excel読み込み -->
   <div class="card">
     <h2>部材拾い出し＋Excel変換</h2>
     <div class="small">
-      画面表示・プルダウン・カート・確認・メール本文は短い名前を使います。<br>
-      保存・共有するExcelは元の長い品目名を維持したまま、C1 と E/F/G だけ更新します。
+      画面表示・メール本文は短い名前を使用し、保存・共有するExcelでは元の長い名前を保持します。
     </div>
 
     <label>元のExcelファイル</label>
@@ -57,6 +185,7 @@ button.ghost{background:#fff;color:#111;border:1px solid #e5e7eb}
     <div id="manualLinkBox" class="linkBox"></div>
   </div>
 
+  <!-- 入力エリア -->
   <div class="card">
     <label>日付</label>
     <select id="dayPicker">
@@ -83,17 +212,17 @@ button.ghost{background:#fff;color:#111;border:1px solid #e5e7eb}
     </div>
 
     <button id="addBtn">カートに入れる</button>
-    <div class="notice">メール本文は短い名前、保存・共有するExcelは元の長い品目名のままです。</div>
+    <div class="notice">保存・共有するExcelは元の長い品目名のままです。</div>
   </div>
 
+  <!-- カート -->
   <div class="card">
     <h3>カート</h3>
     <div id="cartList"></div>
   </div>
 
+  <!-- 自動表示される確認一覧 -->
   <div class="card">
-    <button class="secondary" onclick="showReview()">確認する</button>
-
     <div id="reviewBox" class="review">
       <div style="display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px">
         <span>合計件数: <span id="reviewCount">0</span></span>
@@ -118,12 +247,13 @@ button.ghost{background:#fff;color:#111;border:1px solid #e5e7eb}
   </div>
 </div>
 
+<!-- フッター -->
 <div class="footer">
   <div class="footerRow">
     <button id="saveBtn" class="secondary">保存</button>
     <button id="shareBtn" class="ghost">ファイル共有</button>
   </div>
-  <div class="footerRow" style="margin-top:10px">
+  <div class="footerRow" style="margin-top:8px">
     <button id="mailBtn" class="ghost">メール起動</button>
     <div></div>
   </div>
@@ -135,7 +265,17 @@ button.ghost{background:#fff;color:#111;border:1px solid #e5e7eb}
 
 <script>
 const FIXED_EMAIL = 'horus2018since@gmail.com';
-const NAME_MAP = {"1G ﾌｨﾙﾀｰｽｲｯﾁ付き保安器/NH-K1FATT(lot:20)":"ﾌｨﾙﾀｰｽｲｯﾁ付き保安器","1G 双方向1分岐型保安器/UJH7ACF(lot:50)":"1分岐型保安器","1G 双方向2分配型保安器/UJH7ADF(lot:50)":"2分配型保安器","1G 双方向保安器/UJH7AF(lot:50)":"双方向保安器","CATV保安器盤(lot:1000)":"CATV保安器盤","1G･3.2G対応混合分波器/MXA962K8(lot:50)":"混合分波器","3.2G 4分岐器/UJDC124(lot:150)":"4分岐器","3.2G 屋外用2分配器(ﾌﾞｰﾂ付属)/JFH772(lot:50)":"屋外用2分配器(ﾌﾞｰﾂ付属)","3.2G 屋外用4分配器(ﾌﾞｰﾂ付属)/JFH774(lot:50)":"屋外用4分配器(ﾌﾞｰﾂ付属)","3.2GHz対応1分岐器/DCA1K8(lot:50)":"1分岐器","3.2GHz対応4分配器/DCA4K8(lot:50)":"4分配器","3.2GHz対応6分配器/DCA6K8(lot:50)":"6分配器","3.2GHz対応8分配器/DCA8K8(lot:20)":"8分配器","SHマーク付同軸ｹｰﾌﾞﾙ(S-4C-FB・ﾗｲﾄｸﾞﾚｰ)/AP-500(lot:100)":"ｹｰﾌﾞﾙ(S-4C-FB)","SHマーク付同軸ｹｰﾌﾞﾙ(S-5C-FB・ﾗｲﾄｸﾞﾚｰ)/AP-600(lot:100)":"ｹｰﾌﾞﾙ(S-5C-FB)","同軸ｹｰﾌﾞﾙ(S-5C-FB・黒)/AP-400(lot:100)":"黒ｹｰﾌﾞﾙ","同軸ｹｰﾌﾞﾙ(S-7C-FB・黒)/AP-700B(lot:100)":"幹線黒ｹｰﾌﾞﾙ","DV2穴片サドル/S-5C(L)用(lot:500)":"DV2穴片サドル(S5C)","DV2穴片サドル/S-7C(L)用(lot:500)":"DV2穴片サドル(S7C)","木柱バンド 1745-1900用/TA-ZM18(lot:5)":"木柱バンド","木柱バンド適合アーム/JJ-450(lot:5)":"木柱バンドアーム","木柱バンドZマウント金具/JJ-250(lot:10)":"Zﾏｳﾝﾄ金具","ステップル(白) (lot:2000)":"ｽﾃｯﾌﾟﾙ白","ステップル(黒) (lot:2000)":"ｽﾃｯﾌﾟﾙ黒","スクリュー釘 13連　20巻/ANW2538H(lot:20)":"ｽｸﾘｭｰ釘","F型ｺﾈｸﾀｰ/S-5C-FB用/F-5(lot:100)":"F型ｺﾈｸﾀｰ(S5C)","リング 5C-30個/S-5C-FB用/FP-5(lot:100)":"リング(S5C)","F型接栓/S-4C-FB用/F-4.5(lot:100)":"F型接栓(S4C)","リング 4.5C-30個/S-4C-FB用/FP-4.5(lot:100)":"リング(S4C)","防水型F型ｺﾈｸﾀｰ/S-5C-FB用/FP-5(lot:100)":"防水型F型ｺﾈｸﾀｰ","F型中継接栓/FPP(lot:100)":"F型中継接栓","F型L形接栓/LP-S(lot:100)":"F型L形接栓","アルミリング 5C-100個/S-5C-FB用/AP-5(lot:100)":"ｱﾙﾐﾘﾝｸﾞ(S5C)","アルミリング 7C-100個/S-7C-FB用/AP-7(lot:100)":"ｱﾙﾐﾘﾝｸﾞ(S7C)","Ｆ型接栓（メールオス）/5C用(lot:100)":"F型接栓(ﾒｰﾙｵｽ)","Ｆ型接栓（メールメス）/5C用(lot:100)":"F型接栓(ﾒｰﾙﾒｽ)","両端F型接栓付同軸ケーブル(2m) /SP-ES2WS-P(lot:50)":"両端F型接栓付同軸ｹｰﾌﾞﾙ","4C同軸片端未加工ﾌﾟﾗｸﾞ付ｹｰﾌﾞﾙ（黒）/4MPB-5N(lot:100)":"片端未加工ﾌﾟﾗｸﾞ付ｹｰﾌﾞﾙ","F型接栓/ﾌﾟﾗｸﾞｺﾈｸﾀｰ/4C用/MP-5(lot:100)":"F型接栓/ﾌﾟﾗｸﾞｺﾈｸﾀｰ","ｶﾊﾞｰ付壁面テレビ端子/ﾎﾜｲﾄ/FM･UF-1端子型/DWAT77W(lot:10)":"ｶﾊﾞｰ付壁面ﾃﾚﾋﾞ端子","テレビ接続ｹｰﾌﾞﾙ(4C)片端ネジ式2m/2ATK2LS-B(lot:100)":"TV接続ｹｰﾌﾞﾙ","両端F型接栓付同軸ケーブル(3m) /SP-ES3WS-P(lot:50)":"両端F型接栓付同軸ｹｰﾌﾞﾙ(3m)","両端F型接栓付同軸ケーブル(5m) /SP-ES5WS-P(lot:50)":"両端F型接栓付同軸ｹｰﾌﾞﾙ(5m)","4C同軸片端未加工ﾌﾟﾗｸﾞ付ｹｰﾌﾞﾙ（黒）/4MPB-10N(lot:100)":"片端未加工ﾌﾟﾗｸﾞ付ｹｰﾌﾞﾙ(10m)","4C同軸片端未加工ﾌﾟﾗｸﾞ付ｹｰﾌﾞﾙ（白）/4MPW-5N(lot:100)":"片端未加工ﾌﾟﾗｸﾞ付ｹｰﾌﾞﾙ(白)","4C同軸片端未加工ﾌﾟﾗｸﾞ付ｹｰﾌﾞﾙ（白）/4MPW-10N(lot:100)":"片端未加工ﾌﾟﾗｸﾞ付ｹｰﾌﾞﾙ(白10m)","4C中継アダプタ（ﾒｰﾙﾒｰﾙ）/P-P(lot:100)":"中継ｱﾀﾞﾌﾟﾀ","BNC-F変換プラグ/BNCJ-FP(lot:100)":"BNC-F変換ﾌﾟﾗｸﾞ","F型中継接栓/BF-BF(lot:100)":"F型中継接栓(BF-BF)","分波器内蔵壁面端子/FM･UF-1端子/DUATSC(lot:10)":"分波器内蔵壁面端子","情報端末箱/大/SMH-PO1-B(lot:10)":"情報端末箱(大)","情報端末箱/中/SMH-PO1-S(lot:10)":"情報端末箱(中)","情報端末箱用中板/SPH-KA1-K(lot:10)":"情報端末箱用中板","情報端末箱用LANパッチパネル/8P/SPH-L8L-P(lot:10)":"情報端末箱用LANﾊﾟｯﾁﾊﾟﾈﾙ","情報端末箱用ﾌﾞﾗﾝｸｶﾊﾞｰ/SPH-BK1-W(lot:20)":"情報端末箱用ﾌﾞﾗﾝｸｶﾊﾞｰ","情報端末箱用ｺﾝｾﾝﾄ2個口/SPH-C2R-W(lot:10)":"情報端末箱用ｺﾝｾﾝﾄ","ﾛｰｾﾞｯﾄ/1個口/6極4心用/DW2P19W(lot:10)":"ﾛｰｾﾞｯﾄ","モジュラージャック CAT5E/CAT5E用/DWNSJ5E1W(lot:10)":"ﾓｼﾞｭﾗｰｼﾞｬｯｸ","埋込LANｺﾝｾﾝﾄ取付枠/2連用/DW2P02W(lot:10)":"LANｺﾝｾﾝﾄ取付枠","埋込LANｺﾝｾﾝﾄ取付枠/1連用/DW1P02W(lot:10)":"LANｺﾝｾﾝﾄ取付枠(1連)","LANｺﾝｾﾝﾄ/Panasonic/CAT5E用/NR3160W(lot:10)":"LANｺﾝｾﾝﾄ","LANｺﾝｾﾝﾄ/Panasonic/CAT6用/NR3170W(lot:10)":"LANｺﾝｾﾝﾄ(CAT6)","LANｹｰﾌﾞﾙ/CAT5E/300m/冨士電線製(lot:1)":"LANｹｰﾌﾞﾙ(CAT5E)","LANｹｰﾌﾞﾙ/CAT6/300m/冨士電線製(lot:1)":"LANｹｰﾌﾞﾙ(CAT6)","RJ45ﾓｼﾞｭﾗｰﾌﾟﾗｸﾞ/CAT5E用/FP5E-8PL(lot:100)":"RJ45ﾓｼﾞｭﾗｰﾌﾟﾗｸﾞ","RJ45ﾓｼﾞｭﾗｰﾌﾟﾗｸﾞ/CAT6用/FP6-8PL(lot:100)":"RJ45ﾓｼﾞｭﾗｰﾌﾟﾗｸﾞ(CAT6)","モジュラーカバー/CAT5E/CAT6用/LAN-CO(lot:100)":"ﾓｼﾞｭﾗｰｶﾊﾞｰ","LANｹｰﾌﾞﾙ用2穴片サドル/CAT5E/CAT6用(lot:500)":"LANｹｰﾌﾞﾙ用片ｻﾄﾞﾙ","結束バンド/100mm/白(lot:1000)":"結束ﾊﾞﾝﾄﾞ100白","結束バンド/150mm/白(lot:1000)":"結束ﾊﾞﾝﾄﾞ150白","結束バンド/200mm/白(lot:1000)":"結束ﾊﾞﾝﾄﾞ200白","結束バンド/250mm/白(lot:1000)":"結束ﾊﾞﾝﾄﾞ250白","結束バンド/300mm/白(lot:1000)":"結束ﾊﾞﾝﾄﾞ300白","結束バンド/100mm/黒(lot:1000)":"結束ﾊﾞﾝﾄﾞ100黒","結束バンド/150mm/黒(lot:1000)":"結束ﾊﾞﾝﾄﾞ150黒","結束バンド/200mm/黒(lot:1000)":"結束ﾊﾞﾝﾄﾞ200黒","結束バンド/250mm/黒(lot:1000)":"結束ﾊﾞﾝﾄﾞ250黒","結束バンド/300mm/黒(lot:1000)":"結束ﾊﾞﾝﾄﾞ300黒","自己融着テープ/黒/N-50(lot:10)":"自己融着ﾃｰﾌﾟ","ビニルテープ/黒/19mm×10m(lot:10)":"ﾋﾞﾆﾙﾃｰﾌﾟ黒","ビニルテープ/白/19mm×10m(lot:10)":"ﾋﾞﾆﾙﾃｰﾌﾟ白","絶縁ステップル/白/4C･5C用(lot:1000)":"絶縁ｽﾃｯﾌﾟﾙ","モール1号/白/1m(lot:100)":"ﾓｰﾙ1号","モール2号/白/1m(lot:100)":"ﾓｰﾙ2号","モール3号/白/1m(lot:100)":"ﾓｰﾙ3号","モール1号ジョイント/白(lot:100)":"ﾓｰﾙ1号ｼﾞｮｲﾝﾄ","モール2号ジョイント/白(lot:100)":"ﾓｰﾙ2号ｼﾞｮｲﾝﾄ","モール3号ジョイント/白(lot:100)":"ﾓｰﾙ3号ｼﾞｮｲﾝﾄ","モール1号エンド/白(lot:100)":"ﾓｰﾙ1号ｴﾝﾄﾞ","モール2号エンド/白(lot:100)":"ﾓｰﾙ2号ｴﾝﾄﾞ","モール3号エンド/白(lot:100)":"ﾓｰﾙ3号ｴﾝﾄﾞ","モール1号コーナー/白(lot:100)":"ﾓｰﾙ1号ｺｰﾅｰ","モール2号コーナー/白(lot:100)":"ﾓｰﾙ2号ｺｰﾅｰ","モール3号コーナー/白(lot:100)":"ﾓｰﾙ3号ｺｰﾅｰ","モール1号T字/白(lot:100)":"ﾓｰﾙ1号T字","モール2号T字/白(lot:100)":"ﾓｰﾙ2号T字","モール3号T字/白(lot:100)":"ﾓｰﾙ3号T字","PF管16/50m(lot:1)":"PF管16","PF管22/50m(lot:1)":"PF管22","PF管28/30m(lot:1)":"PF管28","VE管16/2m(lot:20)":"VE管16","VE管22/2m(lot:20)":"VE管22","VE管28/2m(lot:20)":"VE管28","サドル/PF16用(lot:100)":"PF16用ｻﾄﾞﾙ","サドル/PF22用(lot:100)":"PF22用ｻﾄﾞﾙ","サドル/PF28用(lot:100)":"PF28用ｻﾄﾞﾙ","サドル/VE16用(lot:100)":"VE16用ｻﾄﾞﾙ","サドル/VE22用(lot:100)":"VE22用ｻﾄﾞﾙ","サドル/VE28用(lot:100)":"VE28用ｻﾄﾞﾙ","VE用ノーマルベンド/16用(lot:50)":"VEﾍﾞﾝﾄﾞ16","VE用ノーマルベンド/22用(lot:50)":"VEﾍﾞﾝﾄﾞ22","VE用ノーマルベンド/28用(lot:50)":"VEﾍﾞﾝﾄﾞ28","ボックスコネクタ/16用(lot:50)":"ﾎﾞｯｸｽｺﾈｸﾀ16","ボックスコネクタ/22用(lot:50)":"ﾎﾞｯｸｽｺﾈｸﾀ22","ボックスコネクタ/28用(lot:50)":"ﾎﾞｯｸｽｺﾈｸﾀ28","ユニバーサルボックス/1個用(lot:20)":"ﾕﾆﾊﾞｰｻﾙﾎﾞｯｸｽ","露出スイッチボックス/1個用(lot:20)":"露出ｽｲｯﾁﾎﾞｯｸｽ","露出コンセントボックス/1個用(lot:20)":"露出ｺﾝｾﾝﾄﾎﾞｯｸｽ","配線コネクタ/小(lot:100)":"配線ｺﾈｸﾀ小","配線コネクタ/中(lot:100)":"配線ｺﾈｸﾀ中","配線コネクタ/大(lot:100)":"配線ｺﾈｸﾀ大","圧着端子/R1.25-3(lot:1000)":"圧着端子R1.25-3","圧着端子/R2-4(lot:1000)":"圧着端子R2-4","圧着端子/R5.5-4(lot:1000)":"圧着端子R5.5-4","電源コード/2芯1.25sq/10m(lot:10)":"電源ｺｰﾄﾞ1.25sq","電源コード/2芯2.0sq/10m(lot:10)":"電源ｺｰﾄﾞ2.0sq","VVF1.6-2C/100m(lot:1)":"VVF1.6-2C","VVF2.0-2C/100m(lot:1)":"VVF2.0-2C","VVF1.6-3C/100m(lot:1)":"VVF1.6-3C","VVF2.0-3C/100m(lot:1)":"VVF2.0-3C","引込クランプ/5C用(lot:100)":"引込ｸﾗﾝﾌﾟ5C","引込クランプ/7C用(lot:100)":"引込ｸﾗﾝﾌﾟ7C","引留金具/壁面用(lot:50)":"引留金具","木ネジ/3.8×25(lot:1000)":"木ﾈｼﾞ3.8×25","木ネジ/4.1×32(lot:1000)":"木ﾈｼﾞ4.1×32","コンクリートビス/4×25(lot:500)":"ｺﾝｸﾘｰﾄﾋﾞｽ4×25","コンクリートプラグ/6mm(lot:500)":"ｺﾝｸﾘｰﾄﾌﾟﾗｸﾞ6mm","アンカー/6×30(lot:500)":"ｱﾝｶｰ6×30","アンカー/8×40(lot:500)":"ｱﾝｶｰ8×40","パテ/アイボリー(lot:20)":"ﾊﾟﾃ","シール材/白(lot:10)":"ｼｰﾙ材白","シール材/グレー(lot:10)":"ｼｰﾙ材ｸﾞﾚｰ","防水キャップ/5C用(lot:100)":"防水ｷｬｯﾌﾟ5C","防水キャップ/7C用(lot:100)":"防水ｷｬｯﾌﾟ7C","ブーツ/5C用(lot:100)":"ﾌﾞｰﾂ5C","ブーツ/7C用(lot:100)":"ﾌﾞｰﾂ7C","スペーサー/5C用(lot:100)":"ｽﾍﾟｰｻｰ5C","スペーサー/7C用(lot:100)":"ｽﾍﾟｰｻｰ7C","ラッシングベルト/5m(lot:10)":"ﾗｯｼﾝｸﾞﾍﾞﾙﾄ","スパイラルチューブ/黒/10m(lot:10)":"ｽﾊﾟｲﾗﾙﾁｭｰﾌﾞ","保護チューブ/5C用/10m(lot:10)":"保護ﾁｭｰﾌﾞ5C","保護チューブ/7C用/10m(lot:10)":"保護ﾁｭｰﾌﾞ7C"};
+
+/* 長い名前 → 短い名前の対応表（必要に応じて追加してください） */
+const NAME_MAP = {
+  "1G ﾌｨﾙﾀｰｽｲｯﾁ付き保安器/NH-K1FATT(lot:20)": "ﾌｨﾙﾀｰｽｲｯﾁ付き保安器",
+  "1G 双方向1分岐型保安器/UJH7ACF(lot:50)": "1分岐型保安器",
+  "1G 双方向2分配型保安器/UJH7ADF(lot:50)": "2分配型保安器"
+};
+
+function shortName(longName){
+  return NAME_MAP[longName] || longName;
+}
 
 let workbook = null;
 let items = [];
@@ -144,29 +284,6 @@ let currentDownloadUrl = null;
 
 function yen(n){
   return '¥' + Number(n || 0).toLocaleString('ja-JP');
-}
-
-function shortName(longName){
-  return NAME_MAP[longName] || longName;
-}
-
-function clearLink(){
-  const box = document.getElementById('manualLinkBox');
-  box.style.display = 'none';
-  box.innerHTML = '';
-  document.getElementById('saveStatus').textContent = '';
-  if(currentDownloadUrl){
-    URL.revokeObjectURL(currentDownloadUrl);
-    currentDownloadUrl = null;
-  }
-}
-
-function showLink(blob, filename){
-  clearLink();
-  currentDownloadUrl = URL.createObjectURL(blob);
-  const box = document.getElementById('manualLinkBox');
-  box.innerHTML = `保存や共有が始まらない場合は、<a href="${currentDownloadUrl}" download="${filename}">ここをタップ</a>`;
-  box.style.display = 'block';
 }
 
 function loadExcel(){
@@ -178,43 +295,39 @@ function loadExcel(){
 
   const reader = new FileReader();
   reader.onload = function(e){
-    try{
-      workbook = XLSX.read(e.target.result, {type:'array'});
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(sheet, {header:1});
+    workbook = XLSX.read(e.target.result, {type:'array'});
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(sheet, {header:1});
 
-      items = [];
-      const groups = new Set();
+    items = [];
+    const groups = new Set();
 
-      data.forEach((row, i) => {
-        if(row[0] === '品目グループ名' || !row[2]) return;
+    data.forEach((row, i) => {
+      if(row[0] === '品目グループ名' || !row[2]) return;
 
-        const longName = String(row[2]);
-        items.push({
-          rowNumber: i + 1,
-          group: row[0],
-          code: row[1],
-          longName: longName,
-          shortName: shortName(longName),
-          price: Number(row[3] || 0)
-        });
-
-        if(row[0]) groups.add(row[0]);
+      const longName = String(row[2]);
+      items.push({
+        rowNumber: i + 1,
+        group: row[0],
+        code: row[1],
+        longName: longName,
+        shortName: shortName(longName),
+        price: Number(row[3] || 0)
       });
 
-      document.getElementById('groupPicker').innerHTML =
-        '<option value="">選択してください</option>' +
-        [...groups].map(g => `<option value="${g}">${g}</option>`).join('');
+      if(row[0]) groups.add(row[0]);
+    });
 
-      document.getElementById('itemPicker').innerHTML = '';
-      document.getElementById('loadStatus').textContent = `読込完了: ${items.length}件`;
-      cart = [];
-      renderCart();
-      document.getElementById('reviewBox').style.display = 'none';
-      clearLink();
-    }catch(err){
-      document.getElementById('loadStatus').textContent = '読み込みエラー: ' + err.message;
-    }
+    document.getElementById('groupPicker').innerHTML =
+      '<option value="">選択してください</option>' +
+      [...groups].map(g => `<option value="${g}">${g}</option>`).join('');
+
+    document.getElementById('loadStatus').textContent =
+      `読込完了: ${items.length}件`;
+
+    cart = [];
+    renderCart();
+    updateReview();
   };
   reader.readAsArrayBuffer(file);
 }
@@ -254,17 +367,16 @@ document.getElementById('addBtn').addEventListener('click', function(){
 
   existing['d' + day] += qty;
   document.getElementById('qtyOne').value = 0;
+
   renderCart();
-  document.getElementById('reviewBox').style.display = 'none';
-  clearLink();
+  updateReview();
 });
 
 function removeFromCart(index){
   if(!confirm('この品目を削除しますか？')) return;
   cart.splice(index, 1);
   renderCart();
-  document.getElementById('reviewBox').style.display = 'none';
-  clearLink();
+  updateReview();
 }
 
 document.querySelectorAll('.quickAdd').forEach(btn => {
@@ -293,32 +405,19 @@ function renderCart(){
     `;
   }).join('') || '<div class="small">まだ追加されていません。</div>';
 
-  const total = cart.reduce((s, c) => s + c.price * (c.d5 + c.d15 + c.d25), 0);
+  const total = cart.reduce(
+    (s, c) => s + c.price * (c.d5 + c.d15 + c.d25),
+    0
+  );
   document.getElementById('sumTotal').textContent = yen(total);
-}
-
-function showReview(){
-  const body = document.getElementById('reviewBody');
-  const total = cart.reduce((s, c) => s + c.price * (c.d5 + c.d15 + c.d25), 0);
-
-  document.getElementById('reviewCount').textContent = cart.length;
-  document.getElementById('reviewTotal').textContent = yen(total);
-
-  const rows = [];
-  cart.forEach(c => {
-    if(c.d5) rows.push(`<tr><td>${c.shortName}</td><td>5日</td><td class="num">${c.d5}</td><td class="num">${yen(c.price*c.d5)}</td></tr>`);
-    if(c.d15) rows.push(`<tr><td>${c.shortName}</td><td>15日</td><td class="num">${c.d15}</td><td class="num">${yen(c.price*c.d15)}</td></tr>`);
-    if(c.d25) rows.push(`<tr><td>${c.shortName}</td><td>25日</td><td class="num">${c.d25}</td><td class="num">${yen(c.price*c.d25)}</td></tr>`);
-  });
-
-  body.innerHTML = rows.join('') || '<tr><td colspan="4">データがありません。</td></tr>';
-  document.getElementById('reviewBox').style.display = 'block';
-  showMailBody();
 }
 
 function buildMailBody(){
   const company = document.getElementById('companyName').value || '';
-  const total = cart.reduce((s, c) => s + c.price * (c.d5 + c.d15 + c.d25), 0);
+  const total = cart.reduce(
+    (s, c) => s + c.price * (c.d5 + c.d15 + c.d25),
+    0
+  );
 
   const lines = [
     'お世話になっております。',
@@ -346,17 +445,30 @@ function buildMailBody(){
   return lines.join('\\n');
 }
 
-function showMailBody(){
+function updateReview(){
+  const body = document.getElementById('reviewBody');
+  const total = cart.reduce(
+    (s, c) => s + c.price * (c.d5 + c.d15 + c.d25),
+    0
+  );
+
+  document.getElementById('reviewCount').textContent = cart.length;
+  document.getElementById('reviewTotal').textContent = yen(total);
+
+  const rows = [];
+  cart.forEach(c => {
+    if(c.d5) rows.push(`<tr><td>${c.shortName}</td><td>5日</td><td class="num">${c.d5}</td><td class="num">${yen(c.price*c.d5)}</td></tr>`);
+    if(c.d15) rows.push(`<tr><td>${c.shortName}</td><td>15日</td><td class="num">${c.d15}</td><td class="num">${yen(c.price*c.d15)}</td></tr>`);
+    if(c.d25) rows.push(`<tr><td>${c.shortName}</td><td>25日</td><td class="num">${c.d25}</td><td class="num">${yen(c.price*c.d25)}</td></tr>`);
+  });
+
+  body.innerHTML = rows.join('') || '<tr><td colspan="4">データがありません。</td></tr>';
   document.getElementById('mailBody').value = buildMailBody();
 }
 
 function buildModifiedWorkbook(){
-  if(!workbook){
-    throw new Error('先にExcelを読み込んでください。');
-  }
-  if(!cart.length){
-    throw new Error('カートが空です。');
-  }
+  if(!workbook) throw new Error('先にExcelを読み込んでください。');
+  if(!cart.length) throw new Error('カートが空です。');
 
   const wb = XLSX.read(
     XLSX.write(workbook, {type:'array', bookType:'xlsx'}),
@@ -369,7 +481,6 @@ function buildModifiedWorkbook(){
     ws['C1'] = {t:'s', v:companyName};
   }
 
-  // 長い名前は触らない。E/F/Gだけ更新
   cart.forEach(c => {
     ws['E' + c.rowNumber] = {t:'n', v:c.d5 || 0};
     ws['F' + c.rowNumber] = {t:'n', v:c.d15 || 0};
@@ -382,77 +493,38 @@ function buildModifiedWorkbook(){
 function makeFilename(){
   const file = document.getElementById('fileInput').files[0];
   const company = document.getElementById('companyName').value || '会社名なし';
-  const base = file ? file.name.replace(/\\.xlsx$/i,'').replace(/\\.xlsm$/i,'') : '提出要部材購入';
+  const base = file ? file.name.replace(/\.xlsx$/i,'').replace(/\.xlsm$/i,'') : '提出要部材購入';
   return `${base}_${company}_更新.xlsx`;
 }
 
 function saveFile(){
-  try{
-    const wb = buildModifiedWorkbook();
-    const filename = makeFilename();
-    const array = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-    const blob = new Blob([array], {
-      type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    });
-
-    showLink(blob, filename);
-
-    const a = document.createElement('a');
-    a.href = currentDownloadUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => a.remove(), 100);
-
-    document.getElementById('saveStatus').textContent = '保存用ファイルを作成しました。';
-  }catch(err){
-    document.getElementById('saveStatus').textContent = '保存エラー: ' + err.message;
-  }
+  const wb = buildModifiedWorkbook();
+  XLSX.writeFile(wb, makeFilename());
 }
 
 async function shareFile(){
-  try{
-    const wb = buildModifiedWorkbook();
-    const filename = makeFilename();
-    const array = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-    const blob = new Blob([array], {
-      type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  const wb = buildModifiedWorkbook();
+  const filename = makeFilename();
+  const array = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const blob = new Blob([array], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const file = new File([blob], filename, {type: blob.type});
+
+  if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    await navigator.share({
+      files:[file],
+      title:'部材発注',
+      text:buildMailBody()
     });
-
-    showLink(blob, filename);
-
-    const file = new File([blob], filename, {
-      type: blob.type,
-      lastModified: Date.now()
-    });
-
-    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({
-        files:[file],
-        title:'部材発注',
-        text:'宛先: ' + FIXED_EMAIL + '\\n\\n' + buildMailBody()
-      });
-      document.getElementById('saveStatus').textContent = '共有シートを開きました。';
-      return;
-    }
-
-    saveFile();
-  }catch(err){
-    document.getElementById('saveStatus').textContent = '共有エラー: ' + err.message;
+  } else {
+    XLSX.writeFile(wb, filename);
   }
 }
 
 function launchMail(){
-  try{
-    const subject = '部材発注の件';
-    const body = buildMailBody() + '\\n\\n※ 添付ファイルは保存または共有から追加してください。';
-    window.location.href =
-      `mailto:${FIXED_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    document.getElementById('saveStatus').textContent = 'メールアプリを起動しました。';
-    showMailBody();
-  }catch(err){
-    document.getElementById('saveStatus').textContent = 'メール起動エラー: ' + err.message;
-  }
+  const subject = '部材発注の件';
+  const body = buildMailBody();
+  window.location.href =
+    `mailto:${FIXED_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 document.getElementById('saveBtn').addEventListener('click', saveFile);
