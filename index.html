@@ -52,8 +52,6 @@ button.ghost{
   color:#111;
   border:1px solid #e5e7eb;
 }
-
-/* 削除ボタン */
 .deleteBtn{
   background:#ef4444;
   color:#fff;
@@ -91,8 +89,9 @@ button.ghost{
   right:0;
   background:rgba(255,255,255,.96);
   backdrop-filter:blur(8px);
-  border-top:1px solid #e5e7eb;
+  border-top:1px solid #e5eeb;
   padding:12px;
+  z-index:1000;
 }
 .footerRow{
   max-width:820px;
@@ -138,15 +137,23 @@ button.ghost{
   word-break:break-all;
   display:none;
 }
+@media (max-width:700px){
+  .quickBtns{
+    grid-template-columns:repeat(3,1fr);
+  }
+  .footerRow{
+    grid-template-columns:1fr;
+  }
+}
 </style>
 </head>
 
 <body>
 <div class="wrap">
 
-  <!-- Excel読み込み -->
   <div class="card">
     <h2>部材拾い出し＋Excel変換</h2>
+
     <label>元のExcelファイル</label>
     <input type="file" id="fileInput" accept=".xlsx,.xlsm">
 
@@ -154,12 +161,12 @@ button.ghost{
     <input type="text" id="companyName" placeholder="例：株式会社○○">
 
     <button onclick="loadExcel()">Excelを読み込む</button>
+
     <div id="loadStatus" class="small" style="margin-top:8px"></div>
     <div id="saveStatus" class="small" style="margin-top:8px"></div>
     <div id="manualLinkBox" class="linkBox"></div>
   </div>
 
-  <!-- 入力 -->
   <div class="card">
     <label>日付</label>
     <select id="dayPicker">
@@ -188,20 +195,20 @@ button.ghost{
     <button id="addBtn">カートに入れる</button>
   </div>
 
-  <!-- カート -->
   <div class="card">
     <h3>カート</h3>
     <div id="cartList"></div>
   </div>
 
-  <!-- 確認 -->
   <div class="card">
     <button class="secondary" onclick="showReview()">確認する</button>
+
     <div id="reviewBox" class="review">
       <div style="display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px">
         <span>合計件数: <span id="reviewCount">0</span></span>
         <span>合計金額: <span id="reviewTotal">¥0</span></span>
       </div>
+
       <table>
         <thead>
           <tr>
@@ -213,13 +220,13 @@ button.ghost{
         </thead>
         <tbody id="reviewBody"></tbody>
       </table>
+
       <label style="margin-top:12px">メール本文</label>
       <textarea id="mailBody" rows="8"></textarea>
     </div>
   </div>
 </div>
 
-<!-- フッター -->
 <div class="footer">
   <div class="footerRow">
     <button id="saveBtn" class="secondary">保存</button>
@@ -247,7 +254,25 @@ function yen(n){
   return '¥' + Number(n || 0).toLocaleString('ja-JP');
 }
 
-/* Excel読み込み */
+function clearLink(){
+  const box = document.getElementById('manualLinkBox');
+  box.style.display = 'none';
+  box.innerHTML = '';
+  document.getElementById('saveStatus').textContent = '';
+  if(currentDownloadUrl){
+    URL.revokeObjectURL(currentDownloadUrl);
+    currentDownloadUrl = null;
+  }
+}
+
+function showLink(blob, filename){
+  clearLink();
+  currentDownloadUrl = URL.createObjectURL(blob);
+  const box = document.getElementById('manualLinkBox');
+  box.innerHTML = `保存や共有が始まらない場合は、<a href="${currentDownloadUrl}" download="${filename}">ここをタップ</a>`;
+  box.style.display = 'block';
+}
+
 function loadExcel(){
   const file = document.getElementById('fileInput').files[0];
   if(!file){
@@ -257,42 +282,46 @@ function loadExcel(){
 
   const reader = new FileReader();
   reader.onload = function(e){
-    workbook = XLSX.read(e.target.result, {type:'array'});
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet, {header:1});
+    try{
+      workbook = XLSX.read(e.target.result, {type:'array'});
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet, {header:1});
 
-    items = [];
-    const groups = new Set();
+      items = [];
+      const groups = new Set();
 
-    data.forEach((row, i) => {
-      if(row[0] === '品目グループ名' || !row[2]) return;
+      data.forEach((row, i) => {
+        if(row[0] === '品目グループ名' || !row[2]) return;
 
-      items.push({
-        rowNumber: i + 1,
-        group: row[0],
-        code: row[1],
-        longName: String(row[2]),
-        shortName: String(row[2]),
-        price: Number(row[3] || 0)
+        items.push({
+          rowNumber: i + 1,
+          group: row[0],
+          code: row[1],
+          longName: String(row[2]),
+          shortName: String(row[2]),
+          price: Number(row[3] || 0)
+        });
+
+        if(row[0]) groups.add(row[0]);
       });
 
-      groups.add(row[0]);
-    });
+      document.getElementById('groupPicker').innerHTML =
+        '<option value="">選択してください</option>' +
+        [...groups].map(g => `<option value="${g}">${g}</option>`).join('');
 
-    document.getElementById('groupPicker').innerHTML =
-      '<option value="">選択してください</option>' +
-      [...groups].map(g => `<option value="${g}">${g}</option>`).join('');
-
-    document.getElementById('loadStatus').textContent =
-      `読込完了: ${items.length}件`;
-
-    cart = [];
-    renderCart();
+      document.getElementById('itemPicker').innerHTML = '';
+      document.getElementById('loadStatus').textContent = `読込完了: ${items.length}件`;
+      cart = [];
+      renderCart();
+      document.getElementById('reviewBox').style.display = 'none';
+      clearLink();
+    }catch(err){
+      document.getElementById('loadStatus').textContent = '読み込みエラー: ' + err.message;
+    }
   };
   reader.readAsArrayBuffer(file);
 }
 
-/* グループ選択 */
 document.getElementById('groupPicker').addEventListener('change', function(){
   const group = this.value;
   document.getElementById('itemPicker').innerHTML =
@@ -302,7 +331,6 @@ document.getElementById('groupPicker').addEventListener('change', function(){
       .join('');
 });
 
-/* カート追加 */
 document.getElementById('addBtn').addEventListener('click', function(){
   const rowNumber = Number(document.getElementById('itemPicker').value);
   const day = document.getElementById('dayPicker').value;
@@ -320,17 +348,18 @@ document.getElementById('addBtn').addEventListener('click', function(){
   existing['d' + day] += qty;
   document.getElementById('qtyOne').value = 0;
   renderCart();
+  document.getElementById('reviewBox').style.display = 'none';
+  clearLink();
 });
 
-/* 削除ボタン */
 function removeFromCart(index){
   if(!confirm('この品目を削除しますか？')) return;
   cart.splice(index, 1);
   renderCart();
   document.getElementById('reviewBox').style.display = 'none';
+  clearLink();
 }
 
-/* クイック数量 */
 document.querySelectorAll('.quickAdd').forEach(btn => {
   btn.addEventListener('click', () => {
     const input = document.getElementById('qtyOne');
@@ -338,7 +367,6 @@ document.querySelectorAll('.quickAdd').forEach(btn => {
   });
 });
 
-/* カート描画 */
 function renderCart(){
   const list = document.getElementById('cartList');
 
@@ -365,7 +393,6 @@ function renderCart(){
   document.getElementById('sumTotal').textContent = yen(total);
 }
 
-/* 確認表示 */
 function showReview(){
   const body = document.getElementById('reviewBody');
   const total = cart.reduce(
@@ -383,12 +410,11 @@ function showReview(){
     if(c.d25) rows.push(`<tr><td>${c.shortName}</td><td>25日</td><td class="num">${c.d25}</td><td class="num">${yen(c.price*c.d25)}</td></tr>`);
   });
 
-  body.innerHTML = rows.join('');
+  body.innerHTML = rows.join('') || '<tr><td colspan="4">データがありません。</td></tr>';
   document.getElementById('reviewBox').style.display = 'block';
   showMailBody();
 }
 
-/* メール本文生成 */
 function buildMailBody(){
   const company = document.getElementById('companyName').value || '';
   const total = cart.reduce(
@@ -419,18 +445,19 @@ function buildMailBody(){
     company
   );
 
-  return lines.join('\n');
+  return lines.join('\\n');
 }
 
 function showMailBody(){
   document.getElementById('mailBody').value = buildMailBody();
 }
 
-/* 保存 */
-function saveFile(){
+function buildModifiedWorkbook(){
   if(!workbook){
-    alert('先にExcelを読み込んでください。');
-    return;
+    throw new Error('先にExcelを読み込んでください。');
+  }
+  if(!cart.length){
+    throw new Error('カートが空です。');
   }
 
   const wb = XLSX.read(
@@ -450,24 +477,83 @@ function saveFile(){
     ws['G' + c.rowNumber] = {t:'n', v:c.d25 || 0};
   });
 
-  const filename = '部材発注.xlsx';
-  XLSX.writeFile(wb, filename);
+  return wb;
 }
 
-/* 共有 */
+function makeFilename(){
+  const file = document.getElementById('fileInput').files[0];
+  const company = document.getElementById('companyName').value || '会社名なし';
+  const base = file ? file.name.replace(/\\.xlsx$/i,'').replace(/\\.xlsm$/i,'') : '提出要部材購入';
+  return `${base}_${company}_更新.xlsx`;
+}
+
+function saveFile(){
+  try{
+    const wb = buildModifiedWorkbook();
+    const filename = makeFilename();
+    const array = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    const blob = new Blob([array], {
+      type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+
+    showLink(blob, filename);
+
+    const a = document.createElement('a');
+    a.href = currentDownloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 100);
+
+    document.getElementById('saveStatus').textContent = '保存用ファイルを作成しました。';
+  }catch(err){
+    document.getElementById('saveStatus').textContent = '保存エラー: ' + err.message;
+  }
+}
+
 async function shareFile(){
-  const subject = '部材発注の件';
-  const body = buildMailBody();
-  const mailtoLink = `mailto:${FIXED_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailtoLink;
+  try{
+    const wb = buildModifiedWorkbook();
+    const filename = makeFilename();
+    const array = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    const blob = new Blob([array], {
+      type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+
+    showLink(blob, filename);
+
+    const file = new File([blob], filename, {
+      type: blob.type,
+      lastModified: Date.now()
+    });
+
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({
+        files:[file],
+        title:'部材発注',
+        text:'宛先: ' + FIXED_EMAIL + '\\n\\n' + buildMailBody()
+      });
+      document.getElementById('saveStatus').textContent = '共有シートを開きました。';
+      return;
+    }
+
+    saveFile();
+  }catch(err){
+    document.getElementById('saveStatus').textContent = '共有エラー: ' + err.message;
+  }
 }
 
-/* メール起動 */
 function launchMail(){
-  const subject = '部材発注の件';
-  const body = buildMailBody();
-  window.location.href =
-    `mailto:${FIXED_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  try{
+    const subject = '部材発注の件';
+    const body = buildMailBody() + '\\n\\n※ 添付ファイルは保存または共有から追加してください。';
+    window.location.href =
+      `mailto:${FIXED_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    document.getElementById('saveStatus').textContent = 'メールアプリを起動しました。';
+    showMailBody();
+  }catch(err){
+    document.getElementById('saveStatus').textContent = 'メール起動エラー: ' + err.message;
+  }
 }
 
 document.getElementById('saveBtn').addEventListener('click', saveFile);
