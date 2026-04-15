@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>部材拾い出し＋Excel変換 v10.10</title>
+<title>部材拾い出し＋Excel変換</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -63,8 +63,6 @@ button.ghost{
   cursor:pointer;
   width:100%;
 }
-.deleteBtn:hover{ background:#dc2626; }
-
 .quickBtns{
   display:grid;
   grid-template-columns:repeat(5,1fr);
@@ -77,8 +75,6 @@ button.ghost{
   padding:12px;
   margin-top:10px;
 }
-
-/* フッター */
 .footer{
   position:fixed;
   bottom:0;
@@ -88,7 +84,6 @@ button.ghost{
   backdrop-filter:blur(8px);
   border-top:1px solid #e5e7eb;
   padding:8px 12px;
-  z-index:1000;
 }
 .footerRow{
   max-width:820px;
@@ -96,11 +91,6 @@ button.ghost{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
-}
-.footerRow button{
-  padding:8px 10px;
-  font-size:14px;
-  min-height:38px;
 }
 .summary{
   max-width:820px;
@@ -113,8 +103,6 @@ button.ghost{
   display:flex;
   justify-content:space-between;
 }
-
-/* 確認一覧 */
 .review{
   margin-top:12px;
   border:1px solid #e5e7eb;
@@ -147,7 +135,7 @@ button.ghost{
     <input type="text" id="companyName" placeholder="例：株式会社○○">
 
     <button onclick="loadExcel()">Excelを読み込む</button>
-    <div id="loadStatus" class="small" style="margin-top:8px"></div>
+    <div id="loadStatus" class="small"></div>
   </div>
 
   <!-- 入力 -->
@@ -227,15 +215,37 @@ button.ghost{
 <script>
 const FIXED_EMAIL = 'horus2018since@gmail.com';
 
-/* 長い名前 → 短い名前の対応表（必要に応じて追加してください） */
-const NAME_MAP = {
+/* 長い名前 → 短い名前の対応表 */
+const RAW_NAME_MAP = {
   "1G ﾌｨﾙﾀｰｽｲｯﾁ付き保安器/NH-K1FATT(lot:20)": "ﾌｨﾙﾀｰｽｲｯﾁ付き保安器",
   "1G 双方向1分岐型保安器/UJH7ACF(lot:50)": "1分岐型保安器",
-  "1G 双方向2分配型保安器/UJH7ADF(lot:50)": "2分配型保安器"
+  "1G 双方向2分配型保安器/UJH7ADF(lot:50)": "2分配型保安器",
+  "1G 双方向保安器/UJH7AF(lot:50)": "双方向保安器",
+  "CATV保安器盤(lot:1000)": "CATV保安器盤"
 };
 
+/* 文字列正規化 */
+function normalizeName(str){
+  return String(str)
+    .trim()
+    .replace(/\s+/g,'')
+    .replace(/（/g,'(')
+    .replace(/）/g,')')
+    .replace(/／/g,'/')
+    .replace(/[‐-–—−]/g,'-')
+    .toLowerCase();
+}
+
+/* 正規化したマッピング */
+const NAME_MAP = {};
+Object.keys(RAW_NAME_MAP).forEach(key=>{
+  NAME_MAP[normalizeName(key)] = RAW_NAME_MAP[key];
+});
+
+/* 短い名前取得 */
 function shortName(longName){
-  return NAME_MAP[longName] || longName;
+  const normalized = normalizeName(longName);
+  return NAME_MAP[normalized] || longName;
 }
 
 let workbook = null;
@@ -262,7 +272,7 @@ function loadExcel(){
     items = [];
     const groups = new Set();
 
-    data.forEach((row, i) => {
+    data.forEach((row, i)=>{
       if(row[0] === '品目グループ名' || !row[2]) return;
 
       const longName = String(row[2]);
@@ -281,7 +291,7 @@ function loadExcel(){
 
     document.getElementById('groupPicker').innerHTML =
       '<option value="">選択してください</option>' +
-      [...groups].map(g => `<option value="${g}">${g}</option>`).join('');
+      [...groups].map(g=>`<option value="${g}">${g}</option>`).join('');
 
     document.getElementById('loadStatus').textContent =
       `読込完了: ${items.length}件`;
@@ -295,8 +305,8 @@ function loadExcel(){
 document.getElementById('groupPicker').addEventListener('change', function(){
   const group = this.value;
   document.getElementById('itemPicker').innerHTML =
-    items.filter(i => i.group === group)
-         .map(i => `<option value="${i.rowNumber}">${i.shortName}</option>`)
+    items.filter(i=>i.group===group)
+         .map(i=>`<option value="${i.rowNumber}">${i.shortName}</option>`)
          .join('');
 });
 
@@ -304,30 +314,31 @@ document.getElementById('addBtn').addEventListener('click', function(){
   const rowNumber = Number(document.getElementById('itemPicker').value);
   const day = document.getElementById('dayPicker').value;
   const qty = Number(document.getElementById('qtyOne').value);
-  const item = items.find(i => i.rowNumber === rowNumber);
+  const item = items.find(i=>i.rowNumber===rowNumber);
   if(!item || !qty) return;
 
-  let existing = cart.find(c => c.rowNumber === rowNumber);
+  let existing = cart.find(c=>c.rowNumber===rowNumber);
   if(!existing){
     existing = {...item, d5:0, d15:0, d25:0};
     cart.push(existing);
   }
 
-  existing['d' + day] += qty;
+  existing['d'+day] += qty;
   document.getElementById('qtyOne').value = 0;
+
   renderCart();
   updateReview();
 });
 
 function removeFromCart(index){
   if(!confirm('この品目を削除しますか？')) return;
-  cart.splice(index, 1);
+  cart.splice(index,1);
   renderCart();
   updateReview();
 }
 
 document.querySelectorAll('.quickAdd').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click',()=>{
     const input = document.getElementById('qtyOne');
     input.value = Number(input.value || 0) + Number(btn.dataset.add);
   });
@@ -336,7 +347,7 @@ document.querySelectorAll('.quickAdd').forEach(btn=>{
 function renderCart(){
   const list = document.getElementById('cartList');
   list.innerHTML = cart.map((c,i)=>{
-    const qtyText = [];
+    const qtyText=[];
     if(c.d5) qtyText.push(`5日:${c.d5}`);
     if(c.d15) qtyText.push(`15日:${c.d15}`);
     if(c.d25) qtyText.push(`25日:${c.d25}`);
@@ -360,7 +371,7 @@ function updateReview(){
   document.getElementById('reviewCount').textContent = cart.length;
   document.getElementById('reviewTotal').textContent = yen(total);
 
-  const rows = [];
+  const rows=[];
   cart.forEach(c=>{
     if(c.d5) rows.push(`<tr><td>${c.shortName}</td><td>5日</td><td class="num">${c.d5}</td><td class="num">${yen(c.price*c.d5)}</td></tr>`);
     if(c.d15) rows.push(`<tr><td>${c.shortName}</td><td>15日</td><td class="num">${c.d15}</td><td class="num">${yen(c.price*c.d15)}</td></tr>`);
@@ -375,9 +386,9 @@ function buildMailBody(){
   const company = document.getElementById('companyName').value || '';
   const total = cart.reduce((s,c)=>s+c.price*(c.d5+c.d15+c.d25),0);
 
-  const lines = ['お世話になっております。','','以下の部材を発注いたします。',''];
+  const lines=['お世話になっております。','','以下の部材を発注いたします。',''];
   cart.forEach((c,i)=>{
-    const qtyText = [];
+    const qtyText=[];
     if(c.d5) qtyText.push(`5日:${c.d5}`);
     if(c.d15) qtyText.push(`15日:${c.d15}`);
     if(c.d25) qtyText.push(`25日:${c.d25}`);
