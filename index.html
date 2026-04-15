@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>部材拾い出し＋Excel変換</title>
+<title>部材拾い出し＋Excel変換 v10.9</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -88,6 +88,7 @@ button.ghost{
   backdrop-filter:blur(8px);
   border-top:1px solid #e5e7eb;
   padding:8px 12px;
+  z-index:1000;
 }
 .footerRow{
   max-width:820px;
@@ -225,11 +226,12 @@ button.ghost{
 <script>
 const FIXED_EMAIL = 'horus2018since@gmail.com';
 
-/* 長い名前 → 短い名前 */
+/* 長い名前 → 短い名前の対応表 */
 const NAME_MAP = {
   "1G ﾌｨﾙﾀｰｽｲｯﾁ付き保安器/NH-K1FATT(lot:20)": "ﾌｨﾙﾀｰｽｲｯﾁ付き保安器",
   "1G 双方向1分岐型保安器/UJH7ACF(lot:50)": "1分岐型保安器",
   "1G 双方向2分配型保安器/UJH7ADF(lot:50)": "2分配型保安器"
+  // 必要に応じて追加してください
 };
 
 function shortName(longName){
@@ -259,6 +261,7 @@ function loadExcel(){
 
     data.forEach((row, i) => {
       if(row[0] === '品目グループ名' || !row[2]) return;
+
       const longName = String(row[2]);
 
       items.push({
@@ -274,6 +277,7 @@ function loadExcel(){
     });
 
     document.getElementById('groupPicker').innerHTML =
+      '<option value="">選択してください</option>' +
       [...groups].map(g => `<option value="${g}">${g}</option>`).join('');
 
     renderCart();
@@ -310,6 +314,7 @@ document.getElementById('addBtn').addEventListener('click', function(){
 });
 
 function removeFromCart(index){
+  if(!confirm('この品目を削除しますか？')) return;
   cart.splice(index, 1);
   renderCart();
   updateReview();
@@ -355,8 +360,8 @@ function updateReview(){
     if(c.d15) rows.push(`<tr><td>${c.shortName}</td><td>15日</td><td class="num">${c.d15}</td><td class="num">${yen(c.price*c.d15)}</td></tr>`);
     if(c.d25) rows.push(`<tr><td>${c.shortName}</td><td>25日</td><td class="num">${c.d25}</td><td class="num">${yen(c.price*c.d25)}</td></tr>`);
   });
-  body.innerHTML = rows.join('');
 
+  body.innerHTML = rows.join('');
   document.getElementById('mailBody').value = buildMailBody();
 }
 
@@ -377,7 +382,10 @@ function buildMailBody(){
 }
 
 function buildModifiedWorkbook(){
-  const wb = XLSX.read(XLSX.write(workbook,{type:'array',bookType:'xlsx'}),{type:'array'});
+  const wb = XLSX.read(
+    XLSX.write(workbook,{type:'array',bookType:'xlsx'}),
+    {type:'array'}
+  );
   const ws = wb.Sheets[wb.SheetNames[0]];
 
   const company = document.getElementById('companyName').value || '';
@@ -388,6 +396,7 @@ function buildModifiedWorkbook(){
     ws['F'+c.rowNumber] = {t:'n',v:c.d15||0};
     ws['G'+c.rowNumber] = {t:'n',v:c.d25||0};
   });
+
   return wb;
 }
 
