@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>部材拾い出し＋Excel変換 v10.9</title>
+<title>部材拾い出し＋Excel変換 v10.10</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -147,6 +147,7 @@ button.ghost{
     <input type="text" id="companyName" placeholder="例：株式会社○○">
 
     <button onclick="loadExcel()">Excelを読み込む</button>
+    <div id="loadStatus" class="small" style="margin-top:8px"></div>
   </div>
 
   <!-- 入力 -->
@@ -184,7 +185,7 @@ button.ghost{
     <div id="cartList"></div>
   </div>
 
-  <!-- 自動更新される確認一覧 -->
+  <!-- 確認一覧 -->
   <div class="card review">
     <div style="display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px">
       <span>合計件数: <span id="reviewCount">0</span></span>
@@ -226,12 +227,11 @@ button.ghost{
 <script>
 const FIXED_EMAIL = 'horus2018since@gmail.com';
 
-/* 長い名前 → 短い名前の対応表 */
+/* 長い名前 → 短い名前の対応表（必要に応じて追加してください） */
 const NAME_MAP = {
   "1G ﾌｨﾙﾀｰｽｲｯﾁ付き保安器/NH-K1FATT(lot:20)": "ﾌｨﾙﾀｰｽｲｯﾁ付き保安器",
   "1G 双方向1分岐型保安器/UJH7ACF(lot:50)": "1分岐型保安器",
   "1G 双方向2分配型保安器/UJH7ADF(lot:50)": "2分配型保安器"
-  // 必要に応じて追加してください
 };
 
 function shortName(longName){
@@ -248,7 +248,10 @@ function yen(n){
 
 function loadExcel(){
   const file = document.getElementById('fileInput').files[0];
-  if(!file){ alert('Excelを選択してください'); return; }
+  if(!file){
+    alert('Excelを選択してください');
+    return;
+  }
 
   const reader = new FileReader();
   reader.onload = function(e){
@@ -279,6 +282,9 @@ function loadExcel(){
     document.getElementById('groupPicker').innerHTML =
       '<option value="">選択してください</option>' +
       [...groups].map(g => `<option value="${g}">${g}</option>`).join('');
+
+    document.getElementById('loadStatus').textContent =
+      `読込完了: ${items.length}件`;
 
     renderCart();
     updateReview();
