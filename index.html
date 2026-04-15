@@ -396,8 +396,6 @@ function addPickedItem(){
   clearPreparedFile();
   document.getElementById('reviewBox').classList.add('hide');
   const card = document.getElementById('picked-row-' + lastFlashRow);
-  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  setTimeout(() => { lastFlashRow = null; renderPickedList(); }, 700);
 }
 
 function clearAllQty(){
