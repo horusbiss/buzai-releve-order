@@ -2,688 +2,245 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>発注君</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-:root{
-  --bg:#f6f7fb;
-  --card:#ffffff;
-  --line:#e5e7eb;
-  --text:#111827;
-  --muted:#6b7280;
-  --blue:#2563eb;
-  --blue-dark:#1d4ed8;
-  --orange:#ff8a00;
-  --orange-2:#ffb340;
-  --red:#ef4444;
-  --shadow:0 8px 24px rgba(17,24,39,.06);
+body{font-family:sans-serif;background:#f5f5f5;margin:0}
+.wrap{max-width:600px;margin:auto;padding:10px}
+.card{background:#fff;padding:12px;margin-bottom:10px;border-radius:10px}
+
+button{width:100%;padding:14px;margin-top:6px;border:none;border-radius:10px;font-size:16px;font-weight:bold}
+.primary{background:#2563eb;color:#fff}
+.quick{display:flex;gap:5px}
+.quick button{flex:1;background:#eee}
+
+select,input{
+width:100%;
+padding:14px;
+font-size:18px;
+margin-top:6px;
+border-radius:10px;
+border:1px solid #ddd;
 }
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:linear-gradient(180deg,#fff8ef 0,#f6f7fb 180px);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+
+.day button{
+flex:1;
+padding:12px;
 }
-.wrap{
-  max-width:900px;
-  margin:0 auto;
-  padding:14px 14px 150px;
+
+.table td{
+border-bottom:1px solid #ddd;
+padding:8px;
 }
-.logoWrap{
-  display:flex;
-  justify-content:center;
-  margin:4px 0 14px;
-}
-.logoBadge{
-  position:relative;
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 18px 12px;
-  border-radius:999px;
-  background:linear-gradient(135deg,#fff 0,#fff4e5 100%);
-  border:1px solid #ffd7a3;
-  box-shadow:0 10px 24px rgba(255,138,0,.18);
-  animation:floatLogo 2.8s ease-in-out infinite;
-}
-.logoMark{
-  width:42px;height:42px;border-radius:14px;
-  display:grid;place-items:center;
-  background:linear-gradient(135deg,var(--orange),var(--orange-2));
-  color:#fff;font-size:24px;font-weight:900;
-  box-shadow:inset 0 -3px 0 rgba(0,0,0,.12);
-}
-.logoText{line-height:1}
-.logoMain{
-  font-size:34px;
-  font-weight:900;
-  letter-spacing:.06em;
-  color:var(--orange);
-  -webkit-text-stroke:2px #111;
-  text-shadow:
-    -1px -1px 0 #111, 1px -1px 0 #111,
-    -1px 1px 0 #111, 1px 1px 0 #111,
-    0 3px 0 rgba(0,0,0,.08);
-}
-.logoSub{
-  margin-top:4px;
-  font-size:11px;
-  color:#92400e;
-  font-weight:700;
-  letter-spacing:.14em;
-  text-align:center;
-}
-@keyframes floatLogo{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-4px)}
-}
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:20px;
-  padding:16px;
-  margin-bottom:12px;
-  box-shadow:var(--shadow);
-}
-.sectionHead{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:10px;
-}
-.sectionNo{
-  width:28px;height:28px;border-radius:999px;
-  display:grid;place-items:center;
-  background:#111827;color:#fff;
-  font-size:13px;font-weight:800;
-}
-.sectionTitle{
-  font-size:16px;font-weight:800;
-}
-.sub{
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.5;
-  margin-top:-4px;
-  margin-bottom:10px;
-}
-label{
-  display:block;
-  margin:10px 0 6px;
-  font-size:13px;
-  font-weight:800;
-}
-input,select,button{
-  width:100%;
-  min-height:54px;
-  padding:14px 16px;
-  border-radius:16px;
-  border:1px solid var(--line);
-  font-size:18px;
-}
-input,select{
-  background:#fff;
-  appearance:none;
-  -webkit-appearance:none;
-}
-button{
-  cursor:pointer;
-  font-weight:800;
-  transition:.15s ease;
-}
-button:active{transform:scale(.99)}
-.btnBlue{
-  background:linear-gradient(180deg,var(--blue),var(--blue-dark));
-  color:#fff;border:none;
-  box-shadow:0 8px 18px rgba(37,99,235,.22);
-}
-.btnBlue:hover{filter:brightness(1.02)}
-.btnGhost{
-  background:#fff;color:#111;border:1px solid var(--line);
-}
-.dayChoices{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-  margin-top:6px;
-}
-.dayChoices input{display:none}
-.dayChoices label{
-  margin:0;
-  min-height:52px;
-  display:grid;
-  place-items:center;
-  border:1px solid #d1d5db;
-  border-radius:14px;
-  background:#fff;
-  font-size:17px;
-  font-weight:800;
-}
-.dayChoices input:checked + label{
-  background:#111827;
-  color:#fff;
-  border-color:#111827;
-  box-shadow:inset 0 -3px 0 rgba(255,255,255,.06);
-}
-.quickBtns{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:8px;
-  margin-top:8px;
-}
-.quickBtns button{
-  min-height:46px;
-  padding:8px 0;
-  font-size:16px;
-}
-.previewBox{
-  margin-top:10px;
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:12px 14px;
-  background:#fff;
-}
-.previewRow{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:12px;
-  align-items:center;
-}
-.previewName{
-  font-weight:800;
-  font-size:16px;
-  min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-.previewPrice{
-  font-weight:900;
-  font-size:18px;
-  white-space:nowrap;
-  color:#111827;
-}
-.reviewCard{
-  border:1px solid var(--line);
-  border-radius:18px;
-  overflow:hidden;
-  background:#fff;
-}
-.reviewTop{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  padding:12px;
-  border-bottom:1px solid var(--line);
-  background:linear-gradient(180deg,#fff,#fafafa);
-}
-.metric{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
-  background:#fff;
-}
-.metricLabel{
-  color:var(--muted);
-  font-size:12px;
-  font-weight:700;
-}
-.metricValue{
-  margin-top:4px;
-  font-size:24px;
-  font-weight:900;
-}
-.tableWrap{overflow:auto}
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:14px;
-}
-th,td{
-  padding:10px 8px;
-  border-bottom:1px solid var(--line);
-  text-align:left;
-  vertical-align:middle;
-}
-th{
-  background:#fafafa;
-  font-size:12px;
-  color:var(--muted);
-  position:sticky;
-  top:0;
-}
-.num{text-align:right; white-space:nowrap;}
-.deleteBtnTiny{
-  background:var(--red);
-  color:#fff;
-  border:none;
-  border-radius:10px;
-  padding:6px 10px;
-  min-height:auto;
-  font-size:12px;
-  width:auto;
-  white-space:nowrap;
-}
-.footer{
-  position:fixed;
-  left:0;right:0;bottom:0;
-  padding:8px 12px 10px;
-  background:rgba(246,247,251,.96);
-  backdrop-filter:blur(12px);
-  border-top:1px solid var(--line);
-}
-.footerInner{
-  max-width:900px;
-  margin:0 auto;
-}
-.summary{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:12px 14px;
-  font-weight:900;
-  box-shadow:var(--shadow);
-}
-.summary span:last-child{font-size:20px}
-.actionRow{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:8px;
-  margin-bottom:8px;
-}
-.toast{
-  position:fixed;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:86px;
-  background:#111827;
-  color:#fff;
-  padding:10px 14px;
-  border-radius:999px;
-  font-size:13px;
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .2s ease;
-  z-index:20;
-}
-.toast.show{opacity:1}
-.empty{
-  padding:18px 14px;
-  text-align:center;
-  color:var(--muted);
-  font-size:14px;
-}
-.status{
-  margin-top:8px;
-  font-size:13px;
-  color:#166534;
-  font-weight:700;
-}
-@media (max-width:700px){
-  .wrap{padding-bottom:138px}
-  .quickBtns{grid-template-columns:repeat(3,1fr)}
-  .logoMain{font-size:28px}
-  .metricValue{font-size:22px}
-  th,td{padding:9px 6px}
-  .previewRow{grid-template-columns:1fr}
-  .previewPrice{text-align:right}
+
+.delete{
+background:#ef4444;
+color:#fff;
+padding:4px 6px;
+font-size:12px;
 }
 </style>
 </head>
+
 <body>
 <div class="wrap">
 
-  <div class="logoWrap">
-    <div class="logoBadge">
-      <div class="logoMark">発</div>
-      <div class="logoText">
-        <div class="logoMain">発注君</div>
-        <div class="logoSub">ORDER HELPER</div>
-      </div>
-    </div>
-  </div>
+<div class="card">
+<h2 style="text-align:center;color:#ff8c00;-webkit-text-stroke:1px #000;">発注君</h2>
 
-  <div class="card">
-    <div class="sectionHead">
-      <div class="sectionNo">1</div>
-      <div class="sectionTitle">読み込み</div>
-    </div>
-    <div class="sub">元のExcelを読み込んで、Sheet2の品目グループ名・品目名を使います。</div>
+<input type="file" id="file">
+<input id="name" placeholder="発注者">
 
-    <label>元のExcelファイル</label>
-    <input type="file" id="fileInput" accept=".xlsx,.xlsm">
+<button class="primary" onclick="loadExcel()">Excel読込</button>
+</div>
 
-    <label>発注者</label>
-    <input type="text" id="orderer" placeholder="例：山田太郎">
+<div class="card">
 
-    <button class="btnBlue" onclick="loadExcel()">Excelを読み込む</button>
-    <div id="loadStatus" class="status"></div>
-  </div>
+<div class="day">
+<button onclick="setDay(5)">5日</button>
+<button onclick="setDay(15)">15日</button>
+<button onclick="setDay(25)">25日</button>
+</div>
 
-  <div class="card">
-    <div class="sectionHead">
-      <div class="sectionNo">2</div>
-      <div class="sectionTitle">追加</div>
-    </div>
+<select id="group"></select>
+<select id="item"></select>
 
-    <label>日付</label>
-    <div class="dayChoices">
-      <input type="radio" name="dayPicker" id="day5" value="5" checked>
-      <label for="day5">5日</label>
-      <input type="radio" name="dayPicker" id="day15" value="15">
-      <label for="day15">15日</label>
-      <input type="radio" name="dayPicker" id="day25" value="25">
-      <label for="day25">25日</label>
-    </div>
+<div id="preview"></div>
 
-    <label>品目グループ名</label>
-    <select id="groupPicker">
-      <option value="" selected>選択してください</option>
-    </select>
+<input id="qty" type="number" value="0">
 
-    <label>品目名</label>
-    <select id="itemPicker">
-      <option value="">先に品目グループ名を選んでください</option>
-    </select>
+<div class="quick">
+<button onclick="addQty(5)">+5</button>
+<button onclick="addQty(10)">+10</button>
+<button onclick="addQty(20)">+20</button>
+<button onclick="addQty(100)">+100</button>
+<button onclick="addQty(305)">+305</button>
+</div>
 
-    <div class="previewBox">
-      <div class="previewRow">
-        <div class="previewName" id="selectedName">品目未選択</div>
-        <div class="previewPrice" id="selectedPrice">¥0</div>
-      </div>
-    </div>
-
-    <label>数量</label>
-    <input type="number" id="qtyOne" value="0">
-
-    <div class="quickBtns">
-      <button type="button" class="btnGhost quickAdd" data-add="5">+5</button>
-      <button type="button" class="btnGhost quickAdd" data-add="10">+10</button>
-      <button type="button" class="btnGhost quickAdd" data-add="20">+20</button>
-      <button type="button" class="btnGhost quickAdd" data-add="100">+100</button>
-      <button type="button" class="btnGhost quickAdd" data-add="305">+305</button>
-    </div>
-
-    <button id="addBtn" class="btnBlue">カートに入れる</button>
-  </div>
-
-  <div class="card">
-    <div class="sectionHead">
-      <div class="sectionNo">3</div>
-      <div class="sectionTitle">確認一覧</div>
-    </div>
-
-    <div class="reviewCard">
-      <div class="reviewTop">
-        <div class="metric">
-          <div class="metricLabel">合計件数</div>
-          <div class="metricValue" id="reviewCount">0</div>
-        </div>
-        <div class="metric">
-          <div class="metricLabel">合計金額</div>
-          <div class="metricValue" id="reviewTotal">¥0</div>
-        </div>
-      </div>
-
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>発注品目</th>
-              <th>日付</th>
-              <th class="num">数量</th>
-              <th class="num">金額</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="reviewBody">
-            <tr><td colspan="5" class="empty">まだ追加されていません。</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+<button class="primary" onclick="add()">追加</button>
 
 </div>
 
-<div class="footer">
-  <div class="footerInner">
-    <div class="actionRow">
-      <button id="shareBtn" class="btnBlue">共有</button>
-    </div>
-    <div class="summary">
-      <span>合計金額</span>
-      <span id="sumTotal">¥0</span>
-    </div>
-  </div>
+<div class="card">
+<div>件数:<span id="count">0</span> 金額:<span id="total">0</span></div>
+<table class="table" id="list"></table>
 </div>
 
-<div id="toast" class="toast"></div>
+<button class="primary" onclick="share()">共有</button>
+
+</div>
 
 <script>
-let workbook = null;
-let items = [];
-let orderList = [];
 
-function yen(n){
-  return '¥' + Number(n || 0).toLocaleString('ja-JP');
+let wb, items=[], list=[], day=5
+
+function setDay(d){day=d}
+
+function addQty(n){
+qty.value=Number(qty.value)+n
 }
-
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 1200);
-}
-
-function getSelectedDay(){
-  const el = document.querySelector('input[name="dayPicker"]:checked');
-  return el ? el.value : '5';
-}
-
-function setSelectedPreview(item){
-  document.getElementById('selectedName').textContent = item ? item.shortName : '品目未選択';
-  document.getElementById('selectedPrice').textContent = item ? yen(item.price) : '¥0';
-}
-
-document.querySelectorAll('.quickAdd').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const input = document.getElementById('qtyOne');
-    input.value = Number(input.value || 0) + Number(btn.dataset.add);
-  });
-});
 
 function loadExcel(){
-  const file = document.getElementById('fileInput').files[0];
-  if(!file){
-    alert('Excelファイルを選択してください');
-    return;
-  }
 
-  const reader = new FileReader();
-  reader.onload = function(e){
-    workbook = XLSX.read(e.target.result, {type:'array'});
-    const sheet1 = workbook.Sheets['Sheet1'] || workbook.Sheets[workbook.SheetNames[0]];
-    const sheet2 = workbook.Sheets['Sheet2'] || workbook.Sheets[workbook.SheetNames[1]];
+let file=document.getElementById("file").files[0]
+let r=new FileReader()
 
-    const data1 = XLSX.utils.sheet_to_json(sheet1, {header:1, defval:''});
-    const data2 = XLSX.utils.sheet_to_json(sheet2, {header:1, defval:''});
+r.onload=e=>{
 
-    items = [];
-    const groups = [];
-    const seenGroups = new Set();
+wb=XLSX.read(e.target.result,{type:"array"})
 
-    for(let r=1; r<data2.length; r++){
-      if(!data2[r] || !data2[r][2]) continue;
-      const group = String(data2[r][0] || '');
-      const shortName = String(data2[r][3] || data2[r][2] || '');
-      const price = Number((data1[r+1] && data1[r+1][3]) || 0);
-      items.push({
-        sheet1Row: r+2,
-        group: group,
-        shortName: shortName,
-        price: price
-      });
-      if(group && !seenGroups.has(group)){
-        seenGroups.add(group);
-        groups.push(group);
-      }
-    }
+let s1=wb.Sheets["Sheet1"]
+let s2=wb.Sheets["Sheet2"]
 
-    const groupPicker = document.getElementById('groupPicker');
-    groupPicker.innerHTML =
-      '<option value="" selected>選択してください</option>' +
-      groups.map(g=>`<option value="${g}">${g}</option>`).join('');
-    groupPicker.value = '';
+let d1=XLSX.utils.sheet_to_json(s1,{header:1})
+let d2=XLSX.utils.sheet_to_json(s2,{header:1})
 
-    const itemPicker = document.getElementById('itemPicker');
-    itemPicker.innerHTML = '<option value="">先に品目グループ名を選んでください</option>';
-    itemPicker.value = '';
+items=[]
+let groups=new Set()
 
-    setSelectedPreview(null);
-    document.getElementById('loadStatus').textContent = '読込完了';
-    showToast('Excelを読み込みました');
-  };
-  reader.readAsArrayBuffer(file);
+for(let i=1;i<d2.length;i++){
+if(!d2[i][2])continue
+
+items.push({
+group:d2[i][0],
+name:d2[i][3]||d2[i][2],
+price:Number(d1[i+1][3]||0)
+})
+
+groups.add(d2[i][0])
 }
 
-document.getElementById('groupPicker').addEventListener('change', function(){
-  const group = this.value;
-  const itemPicker = document.getElementById('itemPicker');
+group.innerHTML='<option value="">選択</option>'
+groups.forEach(v=>{
+group.innerHTML+=`<option>${v}</option>`
+})
 
-  if(!group){
-    itemPicker.innerHTML = '<option value="">先に品目グループ名を選んでください</option>';
-    itemPicker.value = '';
-    setSelectedPreview(null);
-    return;
-  }
-
-  itemPicker.innerHTML =
-    '<option value="">選択してください</option>' +
-    items.filter(i=>i.group===group)
-         .map(i=>`<option value="${i.sheet1Row}">${i.shortName}</option>`)
-         .join('');
-  itemPicker.value = '';
-  setSelectedPreview(null);
-});
-
-document.getElementById('itemPicker').addEventListener('change', function(){
-  const row = Number(this.value);
-  const item = items.find(i=>i.sheet1Row===row);
-  setSelectedPreview(item || null);
-});
-
-document.getElementById('addBtn').addEventListener('click', function(){
-  const row = Number(document.getElementById('itemPicker').value);
-  const qty = Number(document.getElementById('qtyOne').value);
-  const day = getSelectedDay();
-
-  if(!row || !qty){
-    alert('品目と数量を入力してください');
-    return;
-  }
-
-  const item = items.find(i=>i.sheet1Row===row);
-  let existing = orderList.find(o => o.sheet1Row === row && o.day === day);
-
-  if(existing){
-    existing.qty += qty;
-  }else{
-    orderList.push({
-      sheet1Row: row,
-      shortName: item.shortName,
-      price: item.price,
-      day: day,
-      qty: qty
-    });
-  }
-
-  updateReview();
-  showToast('確認一覧に追加しました');
-  document.getElementById('qtyOne').value = 0;
-});
-
-function removeFromReview(index){
-  orderList.splice(index,1);
-  updateReview();
+alert("読込OK")
 }
 
-function updateReview(){
-  const body=document.getElementById('reviewBody');
-  let count=0,total=0;
-
-  if(orderList.length === 0){
-    body.innerHTML = '<tr><td colspan="5" class="empty">まだ追加されていません。</td></tr>';
-  }else{
-    body.innerHTML = orderList.map((o,i)=>{
-      const amount=o.price*o.qty;
-      count+=o.qty;
-      total+=amount;
-
-      return `
-        <tr>
-          <td>${o.shortName}</td>
-          <td>${o.day}日</td>
-          <td class="num">${o.qty}</td>
-          <td class="num">${yen(amount)}</td>
-          <td><button class="deleteBtnTiny" onclick="removeFromReview(${i})">削除</button></td>
-        </tr>
-      `;
-    }).join('');
-  }
-
-  document.getElementById('reviewCount').textContent = count.toLocaleString('ja-JP');
-  document.getElementById('reviewTotal').textContent = yen(total);
-  document.getElementById('sumTotal').textContent = yen(total);
+r.readAsArrayBuffer(file)
 }
 
-function buildModifiedWorkbook(){
-  const wb = XLSX.read(
-    XLSX.write(workbook,{type:'array',bookType:'xlsx'}),
-    {type:'array'}
-  );
-  const ws = wb.Sheets['Sheet1'] || wb.Sheets[wb.SheetNames[0]];
+group.onchange=e=>{
+item.innerHTML='<option value="">選択</option>'
 
-  orderList.forEach(o=>{
-    const col = o.day==='5' ? 'E' : o.day==='15' ? 'F' : 'G';
-    ws[col+o.sheet1Row] = {t:'n',v:o.qty};
-  });
-
-  return wb;
+items.filter(x=>x.group==group.value).forEach(x=>{
+item.innerHTML+=`<option>${x.name}</option>`
+})
 }
 
-async function shareWorkbook(){
-  if(!workbook){
-    alert('先にExcelを読み込んでください');
-    return;
-  }
-  if(orderList.length === 0){
-    alert('確認一覧が空です');
-    return;
-  }
-
-  const wb = buildModifiedWorkbook();
-  const array = XLSX.write(wb,{bookType:'xlsx',type:'array'});
-  const blob = new Blob([array],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const file = new File([blob],'提出要部材購入_更新.xlsx',{type:blob.type});
-
-  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-    await navigator.share({files:[file],title:'部材発注'});
-  }else{
-    XLSX.writeFile(wb,'提出要部材購入_更新.xlsx');
-  }
+item.onchange=e=>{
+let it=items.find(x=>x.name==item.value)
+preview.innerHTML=`${it.name} ¥${it.price}`
 }
 
-document.getElementById('shareBtn').addEventListener('click', ()=>{
-  shareWorkbook().catch(err => alert(err.message || '共有に失敗しました'));
-});
+function add(){
+
+let name=item.value
+let q=Number(qty.value)
+
+if(!name||q<=0){
+alert("入力不足")
+return
+}
+
+let it=items.find(x=>x.name==name)
+
+let ex=list.find(x=>x.name==name&&x.day==day)
+
+if(ex)ex.qty+=q
+else list.push({name,price:it.price,day,qty:q})
+
+render()
+}
+
+function remove(i){
+list.splice(i,1)
+render()
+}
+
+function render(){
+
+let html=""
+let c=0,t=0
+
+list.forEach((x,i)=>{
+let m=x.price*x.qty
+c+=x.qty
+t+=m
+
+html+=`<tr>
+<td>${x.name}</td>
+<td>${x.day}</td>
+<td>${x.qty}</td>
+<td>${m}</td>
+<td><button class="delete" onclick="remove(${i})">削除</button></td>
+</tr>`
+})
+
+listEl.innerHTML=html
+count.innerText=c
+total.innerText=t
+}
+
+function build(){
+
+// ⭐ Sheet3のみ書き込み
+let ws=wb.Sheets["Sheet3"]
+
+let data=[["品目","日付","数量"]]
+
+list.forEach(x=>{
+data.push([x.name,x.day,x.qty])
+})
+
+wb.Sheets["Sheet3"]=XLSX.utils.aoa_to_sheet(data)
+
+return wb
+}
+
+async function share(){
+
+if(!wb){alert("未読込");return}
+if(list.length==0){alert("空");return}
+
+let w=build()
+
+let data=XLSX.write(w,{bookType:"xlsx",type:"array"})
+let blob=new Blob([data])
+let file=new File([blob],"発注.xlsx")
+
+if(navigator.share){
+await navigator.share({files:[file]})
+}else{
+XLSX.writeFile(w,"発注.xlsx")
+}
+
+}
+
 </script>
 </body>
 </html>
