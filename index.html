@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>部材拾い出し＋Excel変換 v11.2</title>
+<title>部材拾い出し＋Excel変換</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -41,28 +41,23 @@ input,select,button{
   box-sizing:border-box;
 }
 button{
-  background:#111827;
-  color:#fff;
-  font-weight:700;
   cursor:pointer;
 }
-button.secondary{ background:#374151; }
-button.ghost{
-  background:#fff;
-  color:#111;
-  border:1px solid #e5e7eb;
+button.primary{
+  background:#2563eb;
+  color:#fff;
+  font-weight:700;
+  border:none;
 }
-.small{
-  font-size:12px;
-  color:#6b7280;
+button.primary:hover{
+  background:#1d4ed8;
 }
-.status{
-  margin-top:8px;
-  font-size:13px;
-  color:#166534;
+button.secondary{
+  background:#374151;
+  color:#fff;
+  font-weight:700;
+  border:none;
 }
-
-/* 日付ボタン */
 .dayChoices{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -85,40 +80,6 @@ button.ghost{
   color:#fff;
   border-color:#111827;
 }
-
-/* カート */
-.item{
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:10px 12px;
-  margin-top:10px;
-}
-.cartRow{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.cartName{
-  font-weight:700;
-  flex:1;
-}
-.cartQty,.cartAmount{
-  font-weight:700;
-  white-space:nowrap;
-}
-.deleteBtnSmall{
-  background:#ef4444;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:6px 10px;
-  font-weight:700;
-  cursor:pointer;
-  font-size:12px;
-}
-.deleteBtnSmall:hover{ background:#dc2626; }
-
-/* 確認一覧 */
 .review table{
   width:100%;
   border-collapse:collapse;
@@ -128,8 +89,18 @@ button.ghost{
   padding:8px;
 }
 .review .num{ text-align:right; }
-
-/* フッター */
+.deleteBtnTiny{
+  background:#ef4444;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  padding:4px 8px;
+  font-size:11px;
+  cursor:pointer;
+}
+.deleteBtnTiny:hover{
+  background:#dc2626;
+}
 .footer{
   position:fixed;
   bottom:0;
@@ -142,9 +113,6 @@ button.ghost{
 .footerRow{
   max-width:860px;
   margin:0 auto;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
 }
 .summary{
   max-width:860px;
@@ -157,8 +125,6 @@ button.ghost{
   display:flex;
   justify-content:space-between;
 }
-
-/* トースト */
 .toast{
   position:fixed;
   left:50%;
@@ -189,8 +155,7 @@ button.ghost{
     <label>発注者</label>
     <input type="text" id="orderer" placeholder="例：山田太郎">
 
-    <button onclick="loadExcel()">Excelを読み込む</button>
-    <div id="loadStatus" class="status"></div>
+    <button class="primary" onclick="loadExcel()">Excelを読み込む</button>
   </div>
 
   <!-- 手順2 -->
@@ -214,13 +179,7 @@ button.ghost{
     <label>数量</label>
     <input type="number" id="qtyOne" value="0">
 
-    <button id="addBtn">カートに入れる</button>
-  </div>
-
-  <!-- カート -->
-  <div class="card">
-    <h3>カート</h3>
-    <div id="cartList"></div>
+    <button id="addBtn" class="primary">カートに入れる</button>
   </div>
 
   <!-- 確認一覧 -->
@@ -236,6 +195,7 @@ button.ghost{
           <th>日付</th>
           <th class="num">数量</th>
           <th class="num">金額</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="reviewBody"></tbody>
@@ -246,8 +206,7 @@ button.ghost{
 <!-- フッター -->
 <div class="footer">
   <div class="footerRow">
-    <button id="saveBtn" class="secondary">保存</button>
-    <button id="shareBtn" class="ghost">ファイル共有</button>
+    <button id="saveBtn" class="secondary">Excel保存</button>
   </div>
   <div class="summary">
     <span>合計金額</span>
@@ -260,14 +219,10 @@ button.ghost{
 <script>
 let workbook = null;
 let items = [];
-let cart = [];
+let orderList = [];
 
 function yen(n){
   return '¥' + Number(n || 0).toLocaleString('ja-JP');
-}
-
-function getSelectedDay(){
-  return document.querySelector('input[name="dayPicker"]:checked').value;
 }
 
 function showToast(msg){
@@ -275,6 +230,10 @@ function showToast(msg){
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 1200);
+}
+
+function getSelectedDay(){
+  return document.querySelector('input[name="dayPicker"]:checked').value;
 }
 
 /* Excel読み込み */
@@ -312,7 +271,6 @@ function loadExcel(){
       [...groups].map(g=>`<option value="${g}">${g}</option>`).join('');
 
     showToast('Excelを読み込みました');
-    document.getElementById('loadStatus').textContent = '読込完了';
   };
   reader.readAsArrayBuffer(file);
 }
@@ -326,78 +284,79 @@ document.getElementById('groupPicker').addEventListener('change', function(){
          .join('');
 });
 
-/* カート追加 */
+/* 追加 */
 document.getElementById('addBtn').addEventListener('click', function(){
   const row = Number(document.getElementById('itemPicker').value);
   const qty = Number(document.getElementById('qtyOne').value);
   const day = getSelectedDay();
   if(!row || !qty) return;
 
-  let item = items.find(i=>i.sheet1Row===row);
-  let existing = cart.find(c=>c.sheet1Row===row);
-  if(!existing){
-    existing = {...item, d5:0, d15:0, d25:0};
-    cart.push(existing);
+  const item = items.find(i=>i.sheet1Row===row);
+
+  let existing = orderList.find(o =>
+    o.sheet1Row === row && o.day === day
+  );
+
+  if(existing){
+    existing.qty += qty;
+  }else{
+    orderList.push({
+      sheet1Row: row,
+      shortName: item.shortName,
+      price: item.price,
+      day: day,
+      qty: qty
+    });
   }
-  existing['d'+day]+=qty;
-  renderCart();
+
   updateReview();
-  showToast('カートに入れました');
+  showToast('確認一覧に追加しました');
+  document.getElementById('qtyOne').value = 0;
 });
 
-/* カート削除 */
-function removeFromCart(index){
-  cart.splice(index,1);
-  renderCart();
+/* 削除 */
+function removeFromReview(index){
+  orderList.splice(index,1);
   updateReview();
-}
-
-/* カート描画 */
-function renderCart(){
-  const list=document.getElementById('cartList');
-  list.innerHTML=cart.map((c,i)=>{
-    const totalQty=c.d5+c.d15+c.d25;
-    const totalAmt=c.price*totalQty;
-    return `<div class="item">
-      <div class="cartRow">
-        <div class="cartName">${c.shortName}</div>
-        <div class="cartQty">${totalQty}</div>
-        <div class="cartAmount">${yen(totalAmt)}</div>
-        <button class="deleteBtnSmall" onclick="removeFromCart(${i})">削除</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  const total=cart.reduce((s,c)=>s+c.price*(c.d5+c.d15+c.d25),0);
-  document.getElementById('sumTotal').textContent=yen(total);
 }
 
 /* 確認一覧 */
 function updateReview(){
   const body=document.getElementById('reviewBody');
   let count=0,total=0;
-  const rows=[];
 
-  cart.forEach(c=>{
-    if(c.d5){count+=c.d5; total+=c.price*c.d5; rows.push(`<tr><td>${c.shortName}</td><td>5日</td><td class="num">${c.d5}</td><td class="num">${yen(c.price*c.d5)}</td></tr>`);}
-    if(c.d15){count+=c.d15; total+=c.price*c.d15; rows.push(`<tr><td>${c.shortName}</td><td>15日</td><td class="num">${c.d15}</td><td class="num">${yen(c.price*c.d15)}</td></tr>`);}
-    if(c.d25){count+=c.d25; total+=c.price*c.d25; rows.push(`<tr><td>${c.shortName}</td><td>25日</td><td class="num">${c.d25}</td><td class="num">${yen(c.price*c.d25)}</td></tr>`);}
-  });
+  body.innerHTML = orderList.map((o,i)=>{
+    const amount=o.price*o.qty;
+    count+=o.qty;
+    total+=amount;
+
+    return `
+      <tr>
+        <td>${o.shortName}</td>
+        <td>${o.day}日</td>
+        <td class="num">${o.qty}</td>
+        <td class="num">${yen(amount)}</td>
+        <td><button class="deleteBtnTiny" onclick="removeFromReview(${i})">削除</button></td>
+      </tr>
+    `;
+  }).join('');
 
   document.getElementById('reviewCount').textContent=count;
   document.getElementById('reviewTotal').textContent=yen(total);
-  body.innerHTML=rows.join('');
+  document.getElementById('sumTotal').textContent=yen(total);
 }
 
 /* Excel保存 */
 function buildModifiedWorkbook(){
-  const wb=XLSX.read(XLSX.write(workbook,{type:'array',bookType:'xlsx'}),{type:'array'});
+  const wb=XLSX.read(
+    XLSX.write(workbook,{type:'array',bookType:'xlsx'}),
+    {type:'array'}
+  );
   const ws=wb.Sheets['Sheet1'];
 
-  cart.forEach(c=>{
-    ws['E'+c.sheet1Row]={t:'n',v:c.d5||0};
-    ws['F'+c.sheet1Row]={t:'n',v:c.d15||0};
-    ws['G'+c.sheet1Row]={t:'n',v:c.d25||0};
+  orderList.forEach(o=>{
+    const col = o.day==='5' ? 'E' : o.day==='15' ? 'F' : 'G';
+    ws[col+o.sheet1Row]={t:'n',v:o.qty};
   });
 
   return wb;
@@ -405,18 +364,6 @@ function buildModifiedWorkbook(){
 
 document.getElementById('saveBtn').addEventListener('click',()=>{
   XLSX.writeFile(buildModifiedWorkbook(),'提出要部材購入_更新.xlsx');
-});
-
-document.getElementById('shareBtn').addEventListener('click',()=>{
-  const wb=buildModifiedWorkbook();
-  const array=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-  const blob=new Blob([array],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const file=new File([blob],'提出要部材購入_更新.xlsx');
-  if(navigator.share){
-    navigator.share({files:[file],title:'部材発注'});
-  }else{
-    XLSX.writeFile(wb,'提出要部材購入_更新.xlsx');
-  }
 });
 </script>
 </body>
